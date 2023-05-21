@@ -126,6 +126,7 @@ class PiKVMHASensors:
     # Overlay sensors dict on base sensor template dict
     for sensor in sensors:
       s = self.sensor_template | sensor
+      s['id'] = "{unique_id}_{sensor_name}".format(unique_id=self.unique_id, sensor_name=sensor['name'])
       self.sensors.append(s)
     self.mqtt_client     = None
     self.mqtt_connected  = False
@@ -244,7 +245,7 @@ class PiKVMHASensors:
             reading['value'] = round(value, sensor['output_precision'])
           else:
             reading['value'] = value
-          self.info("Publishing reading for sensor {}: {}".format(sensor['id'], ", ".join(['{0}={1}'.format(k, v) for k,v in reading.items()])))
+          self.info("Publishing reading for sensor {}: {}".format(sensor['name'], ", ".join(['{0}={1}'.format(k, v) for k,v in reading.items()])))
           self.publish_message(topic="sensors/{}/state".format(sensor['id']), payload=json.dumps(reading))
       time.sleep(self.config['update_period'])
 
