@@ -1,0 +1,91 @@
+---
+- name:               "chassis_temperature"
+  device_type:        "htu21d"
+  device_address:     0x40
+  device_property:    "temperature"
+  units:              "°C"
+  output_precision:   3
+  display_precision:  1
+  ha_component_type:  "sensor"
+  ha_device_class:    "temperature"
+  ha_icon:            "mdi:thermometer-lines"
+  ha_title:           "Internal Temperature"
+- name:               "chassis_humidity"
+  device_type:        "htu21d"
+  device_address:     0x40
+  device_property:    "relative_humidity"
+  units:              "%"
+  output_precision:   2
+  display_precision:  null
+  ha_component_type:  "sensor"
+  ha_device_class:    "humidity"
+  ha_title:           "Internal Humidity"
+- name:               "water_temperature"
+  device_type:        "ds18b20"
+  device_address:     "0621b1925673"
+  device_property:    "temperature"
+  units:              "°C"
+  output_precision:   3
+  display_precision:  1
+  ha_component_type:  "sensor"
+  ha_device_class:    "temperature"
+  ha_icon:            "mdi:coolant-temperature"
+  ha_title:           "Water Temperature"
+- name:               "air_intake_temperature"
+  device_type:        "ds18b20"
+  device_address:     "05168469e8ff"
+  device_property:    "temperature"
+  device_offset:      0.281
+  units:              "°C"
+  output_precision:   3
+  display_precision:  1
+  ha_component_type:  "sensor"
+  ha_device_class:    "temperature"
+  ha_icon:            "mdi:thermometer-chevron-down"
+  ha_title:           "Intake Temperature"
+- name:               "air_exhaust_temperature"
+  device_type:        "ds18b20"
+  device_address:     "011914033fa3"
+  device_property:    "temperature"
+  units:              "°C"
+  output_precision:   3
+  display_precision:  1
+  ha_component_type:  "sensor"
+  ha_device_class:    "temperature"
+  ha_icon:            "mdi:thermometer-chevron-up"
+  ha_title:           "Outlet Temperature"
+- name:               "atx_power"
+  device_type:        "kvmd"
+  device_property:    "atx_power"
+  ha_component_type:  "binary_sensor"
+  ha_device_class:    "power"
+  ha_title:           "ATX Power"
+- name:               "cpu_temperature"
+  device_type:        "sysinfo"
+  device_property:    "temperature"
+  units:              "°C"
+  output_precision:   3
+  display_precision:  1
+  ha_component_type:  "sensor"
+  ha_device_class:    "temperature"
+  ha_entity_category: "diagnostic"
+  ha_title:           "CPU Temperature"
+- name:               "boot_time"
+  device_type:        "sysinfo"
+  device_property:    "boot_time"
+  ha_component_type:  "sensor"
+  ha_device_class:    "timestamp"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Boot Time"
+- name:               "loadavg"
+  device_type:        "sysinfo"
+  device_property:    "loadavg_1min"
+  units:              "%"
+  output_precision:   1
+  display_precision:  null
+  ha_component_type:  "sensor"
+  ha_device_class:    "temperature"
+  ha_entity_category: "diagnostic"
+  ha_icon:            "mdi:gauge"
+  ha_title:           "System Load"
+...

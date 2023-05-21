@@ -1,0 +1,9 @@
+RPi.GPIO
+paho-mqtt
+pyyaml
+w1thermsensor>=2.*
+adafruit-circuitpython-htu21d
+netifaces
+psutil
+# kvmd - this is provided via the PiKVM OS-installed
+# packages; the version in PyPI is out of date.

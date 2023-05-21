@@ -1,0 +1,15 @@
+---
+- name:               "sensor"      # Required. e.g. chassis_temperature
+  device_type:        "module"      # Required. name of a module/class in sensor_types dir
+  device_address:     null          # Optional. null if N/A, or a device address such as an I2C address or DS18B20 ID
+  device_property:    "temperature" # Required. name of the property to read from the device_type class
+  device_offset:      null          # Optional. null, or an offset correction to apply to the raw value
+  units:              "°C"          # Optional.
+  output_precision:   3             # Optional. number of decimal places to round the measured value to. Use null for 0 decimals places.
+  display_precision:  1             # Optional. number of decimals places to round to for display *in the Home Assistant frontend*
+  ha_component_type:  "sensor"      # Required. HA component type such as 'sensor' or 'binary_sensor'
+  ha_device_class:    "temperature" # Required. HA device class for the component type, e.g. 'temperature'
+  ha_entity_category: null          # Optional. null for a regular sensor, 'diagnostic' or 'config' to separate these readings in the HA device info
+  ha_icon:            "mdi:thermometer" # Optional. Material icon to use in Home Assistant, null for device class default
+  ha_title:           "Temperature" # Required. Friendly title for the entity in Home Assistant
+...

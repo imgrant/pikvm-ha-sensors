@@ -1,0 +1,11 @@
+[Unit]
+Description=PiKVM Home Assistant sensor integration
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/var/lib/kvmd/pst/data/pikvm-ha-sensors/venv/bin/python /var/lib/kvmd/pst/data/pikvm-ha-sensors/pikvm-ha-sensors.py
+
+[Install]
+WantedBy=multi-user.target
