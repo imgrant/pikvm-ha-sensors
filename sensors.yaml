@@ -62,7 +62,7 @@
   ha_title:           "ATX Power"
 - name:               "cpu_temperature"
   device_type:        "sysinfo"
-  device_property:    "temperature"
+  device_property:    "cpu_temperature"
   units:              "°C"
   output_precision:   3
   display_precision:  1
