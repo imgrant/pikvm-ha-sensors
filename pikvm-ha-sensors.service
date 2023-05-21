@@ -8,6 +8,7 @@ Restart=always
 RestartSec=5
 WorkingDirectory=/var/lib/kvmd/pst/data/pikvm-ha-sensors
 ExecStart=/var/lib/kvmd/pst/data/pikvm-ha-sensors/venv/bin/python /var/lib/kvmd/pst/data/pikvm-ha-sensors/pikvm-ha-sensors.py
+Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
