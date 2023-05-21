@@ -35,7 +35,7 @@ class sysinfo():
     """Timestamp (ISO 8601) of when the system was booted."""
     try:
       t = psutil.boot_time()
-      return datetime.fromtimestamp(t, self.timezone).isoformat()
+      return datetime.fromtimestamp(t, ZoneInfo(self.timezone)).isoformat()
     except Exception as error:
       raise MeasurementError(str(error))
   
