@@ -16,7 +16,7 @@
   device_property:    "relative_humidity"
   units:              "%"
   output_precision:   2
-  display_precision:  null
+  display_precision:  0
   ha_component_type:  "sensor"
   ha_device_class:    "humidity"
   ha_title:           "Internal Humidity"
