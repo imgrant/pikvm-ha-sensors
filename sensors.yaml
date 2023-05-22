@@ -88,4 +88,12 @@
   ha_entity_category: "diagnostic"
   ha_icon:            "mdi:gauge"
   ha_title:           "System Load"
+- name:               "update_available"
+  device_type:        "sysinfo"
+  device_property:    "update_available"
+  ha_component_class: "binary_sensor"
+  ha_device_class:    "update"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Update Available"
+  ha_icon:            "mdi:package-up"
 ...
