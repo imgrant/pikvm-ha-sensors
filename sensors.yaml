@@ -93,6 +93,6 @@
   ha_component_type:  "binary_sensor"
   ha_device_class:    "update"
   ha_entity_category: "diagnostic"
-  ha_title:           "Update Available"
+  ha_title:           "System Software"
   ha_icon:            "mdi:package-up"
 ...
