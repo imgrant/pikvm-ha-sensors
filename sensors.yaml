@@ -90,7 +90,7 @@
 - name:               "update_available"
   device_type:        "sysinfo"
   device_property:    "update_available"
-  ha_component_class: "binary_sensor"
+  ha_component_type:  "binary_sensor"
   ha_device_class:    "update"
   ha_entity_category: "diagnostic"
   ha_title:           "Update Available"
