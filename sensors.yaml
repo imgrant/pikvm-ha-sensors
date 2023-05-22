@@ -82,7 +82,7 @@
   device_property:    "loadavg_1min"
   units:              "%"
   output_precision:   1
-  display_precision:  null
+  display_precision:  0
   ha_component_type:  "sensor"
   ha_entity_category: "diagnostic"
   ha_icon:            "mdi:gauge"
