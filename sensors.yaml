@@ -95,4 +95,54 @@
   ha_entity_category: "diagnostic"
   ha_title:           "System Software"
   ha_icon:            "mdi:package-up"
+- name:               "cpu_fan_speed"
+  device_type:        "hostinfo"
+  device_property:    "cpu_fan_speed"
+  units:              "RPM"
+  output_precision:   null
+  display_precision:  0
+  ha_component_type:  "sensor"
+  ha_entity_category: "diagnostic"
+  ha_title:           "CPU Fan Speed"
+  ha_icon:            "mdi:fan"
+- name:               "pump_speed"
+  device_type:        "hostinfo"
+  device_property:    "pump_speed"
+  units:              "RPM"
+  output_precision:   null
+  display_precision:  0
+  ha_component_type:  "sensor"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Pump Speed"
+  ha_icon:            "mdi:pump"
+- name:               "system_fan_speed_1"
+  device_type:        "hostinfo"
+  device_property:    "system_fan1_speed"
+  units:              "RPM"
+  output_precision:   null
+  display_precision:  0
+  ha_component_type:  "sensor"
+  ha_entity_category: "diagnostic"
+  ha_title:           "System Fan 1 Speed"
+  ha_icon:            "mdi:fan-speed-1"
+- name:               "system_fan_speed_2"
+  device_type:        "hostinfo"
+  device_property:    "system_fan2_speed"
+  units:              "RPM"
+  output_precision:   null
+  display_precision:  0
+  ha_component_type:  "sensor"
+  ha_entity_category: "diagnostic"
+  ha_title:           "System Fan 2 Speed"
+  ha_icon:            "mdi:fan-speed-2"
+- name:               "system_fan_speed_3"
+  device_type:        "hostinfo"
+  device_property:    "system_fan3_speed"
+  units:              "RPM"
+  output_precision:   null
+  display_precision:  0
+  ha_component_type:  "sensor"
+  ha_entity_category: "diagnostic"
+  ha_title:           "System Fan 3 Speed"
+  ha_icon:            "mdi:fan-speed-3"
 ...

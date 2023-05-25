@@ -81,7 +81,8 @@ class PiKVMHASensors:
     'mqtt_password':          None,
     'mqtt_ha_prefix':         'homeassistant',
     'pikvm_username':         'admin',
-    'pikvm_password':         None  # Must be overridden (unless auth is disabled)
+    'pikvm_password':         None,  # Must be overridden (unless auth is disabled)
+    'prometheus_url':         None
   }
 
   unique_id = 'pikvm_{}'.format(get_rpi_serial()[-6:]) # suffix is last six digits of serial number

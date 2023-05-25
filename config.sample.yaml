@@ -11,4 +11,5 @@ mqtt_password:   null
 mqtt_ha_prefix:  homeassistant
 pikvm_username:  admin
 pikvm_password:  admin
+prometheus_url:  <URL for Prometheus client metrics endpoint on host>
 ...
