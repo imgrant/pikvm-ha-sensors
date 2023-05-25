@@ -56,10 +56,37 @@ class hostinfo():
     """The speed of system fan 3, in rpm."""
     return self.get_fan_speed("fan5")
 
-  def get_fan_speed(self, sensor_name="fan1"):
+  @property
+  def host_cpu_temperature(self):
+    """The host CPU (AMD K10) temperature, in °C."""
+    return self.get_temp(sensor="temp1", chip="pci0000:00_0000:00:18_3")
+
+  @property
+  def host_system_temperature(self):
+    """The host 'system' temperature, in °C."""
+    return self.get_temp(sensor="temp2", chip="platform_nct6683_2592")
+
+  @property
+  def host_vrm_temperature(self):
+    """The host VRM temperature, in °C."""
+    return self.get_temp(sensor="temp3", chip="platform_nct6683_2592")
+
+  @property
+  def host_pch_temperature(self):
+    """The host PCH temperature, in °C."""
+    return self.get_temp(sensor="temp4", chip="platform_nct6683_2592")
+
+  def get_fan_speed(self, fan = "fan1", chip: Optional[str] = "platform_nct6683_2592"):
+    return self._get_metric_value(fan, chip, 'node_hwmon_fan_rpm')
+  
+  def get_temp(self, sensor = "temp1", chip: Optional[str] = "pci0000:00_0000:00:18_3"):
+    return self._get_metric_value(sensor, chip, 'node_hwmon_temp_celsius')
+
+  def _get_metric_value(self, sensor, chip, metric):
     self.read_prom_metrics()
-    fan = list(filter(lambda f: f['labels']['sensor'] == sensor_name, self.metrics['node_hwmon_fan_rpm']['metrics']))
-    return fan['value']
+    node_metrics = list(filter(lambda n: n['name'] == metric, self.metrics))[0]['metrics']
+    sensor_metric = list(filter(lambda m: m['labels']['chip'] == chip and m['labels']['sensor'] == sensor, node_metrics))[0]
+    return sensor_metric['value']
 
   @property
   def serial_number(self):
