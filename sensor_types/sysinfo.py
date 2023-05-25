@@ -2,7 +2,7 @@ import time, psutil
 from typing import Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from pacman import get_installed as installed_packages
+import pacman
 from .measurementerror import MeasurementError
 
 class sysinfo():
@@ -11,6 +11,9 @@ class sysinfo():
   model = 'BCMxxxx'
   timezone = 'Europe/London'
 
+  update_check_timestamp = datetime.fromisoformat("2023-01-01T00:00")
+  update_check_interval_hours = 12
+  update_check_value = "OFF"
   pikvm_arch_packages = [
       'kvmd',
       'kvmd-fan',
@@ -75,9 +78,14 @@ class sysinfo():
   def update_available(self):
     """Whether any OS packages for PiKVM have updates available."""
     try:
-      packages = installed_packages()
-      upgradable = list(filter(lambda p: p['id'] in self.pikvm_arch_packages and p['upgradable'] is True, packages))
-      return "ON" if len(upgradable) > 0 else "OFF"
+      hours_since_last_check = divmod((datetime.now() - self.update_check_timestamp).total_seconds(), 3600)[0]
+      if hours_since_last_check > self.update_check_interval_hours:
+        pacman.refresh()
+        packages = pacman.get_installed()
+        upgradable = list(filter(lambda p: p['id'] in self.pikvm_arch_packages and p['upgradable'] is True, packages))
+        self.update_check_value = "ON" if len(upgradable) > 0 else "OFF"
+        self.update_check_timestamp = datetime.now()
+      return self.update_check_value
     except Exception as error:
       raise MeasurementError(str(error))
 
