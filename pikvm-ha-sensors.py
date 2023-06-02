@@ -143,7 +143,7 @@ class PiKVMHASensors:
 
   def info(self, message):
     if self.config['verbose'] == True:
-      print("INFO: {}".format(message))
+      print("{}".format(message))
 
   def error(self, message):
     raise SystemExit(message)
