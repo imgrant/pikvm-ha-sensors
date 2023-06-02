@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import sys, socket, traceback
+import sys, socket
 import netifaces
 import json, yaml, time
 import re, uuid
 from datetime import datetime
 from typing import List, Optional
+from retrying import retry, RetryError
 import importlib
 import paho.mqtt.client as mqtt
-from threading import Thread
 import kvmd
 from sensor_types.measurementerror import MeasurementError
 
@@ -146,7 +146,7 @@ class PiKVMHASensors:
       print("INFO: {}".format(message))
 
   def error(self, message):
-    sys.exit("ERROR: {}".format(message))
+    raise SystemExit(message)
 
   @staticmethod
   def transport_to_protocol(transport):
@@ -175,17 +175,15 @@ class PiKVMHASensors:
       self.mqtt_client.on_disconnect = self.mqtt_on_disconnect
       try:
         self.mqtt_client.connect(self.config['mqtt_broker'], int(self.config['mqtt_port']), 30)
-        self.mqtt_client.loop_forever()
-        time.sleep(1)
-      except:
-        self.info(traceback.format_exc())
-        self.mqtt_client = None
+        self.mqtt_client.loop_start()
+      except Exception as e:
+        self.error("MQTT client error: {}".format(str(e)))
     else:
       self.error("Unable to reach MQTT broker at {}".format(broker))
 
   def mqtt_on_connect(self, mqtt_client, userdata, flags, rc):
     self.mqtt_connected = True
-    self.info('MQTT broker connected!')
+    self.info('MQTT broker connected.')
     if self.ha_registered is False:
       for sensor in self.sensors:
         self.publish_ha_discovery(sensor)
@@ -195,14 +193,19 @@ class PiKVMHASensors:
 
   def mqtt_on_disconnect(self, mqtt_client, userdata, rc):
     self.mqtt_connected = False
-    self.info('MQTT broker disconnected! Will reconnect ...')
+    self.info('MQTT broker disconnected!')
     if rc == 0:
       self.mqtt_connect()
     else:
-      time.sleep(5)
-      while not self.mqtt_broker_reachable():
-        time.sleep(10)
-      self.mqtt_client.reconnect()
+      try:
+        self.retry_or_fail_reconnect()
+      except RetryError:
+        self.error("Reconnecting to MQTT broker failed after multiple attempts.")
+  
+  @retry(stop_max_attempt_number=10, wait_exponential_multiplier=1000, wait_exponential_max=30000, wrap_exception=True)
+  def retry_or_fail_reconnect(self):
+    self.info("Attempting to reconnect to MQTT broker ...")
+    self.mqtt_client.reconnect()
 
   def mqtt_broker_reachable(self):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -217,8 +220,6 @@ class PiKVMHASensors:
   def publish_message(self, topic, payload, qos=0, retain=False):
     if self.mqtt_connected:
       self.mqtt_client.publish(topic=topic, payload=str(payload), qos=qos, retain=retain)
-    else:
-      self.info("Message publishing is unavailable when the MQTT broker is not connected")
 
   def init_sensor(self, sensor):
     self.info("Initialising sensor {name} (type: {module})".format(name=sensor['name'], module=sensor['device_type']))
@@ -226,29 +227,30 @@ class PiKVMHASensors:
     sensor['instance'] = SensorClass(addr=sensor['device_address'], config=self.config)
 
   def update(self):
-    while True:
-      for sensor in self.sensors:
-        status_topic = "sensors/{}/status".format(sensor['id'])
-        reading = {}
-        try:
-          # Read the measurement value from the sensor
-          value = getattr(sensor['instance'], sensor['device_property'])
-        except MeasurementError as error:
-          self.publish_message(topic=status_topic, payload="offline")
-          self.info("Failed to update measurements for sensor {} ({}). Sensor status will be set to offline.".format(sensor['id'], str(error)))
-        else:
-          self.publish_message(topic=status_topic, payload="online")
-          reading['timestamp'] = datetime.now().isoformat(timespec='seconds')
-          # Apply any offset correction and round value for output
-          if value is not None and not isinstance(value, (bool, str)):
-            if sensor['device_offset'] is not None:
-              value += sensor['device_offset']
-            reading['value'] = round(value, sensor['output_precision'])
+      try:
+        for sensor in self.sensors:
+          status_topic = "sensors/{}/status".format(sensor['id'])
+          reading = {}
+          try:
+            # Read the measurement value from the sensor
+            value = getattr(sensor['instance'], sensor['device_property'])
+          except MeasurementError as error:
+            self.publish_message(topic=status_topic, payload="offline")
+            self.info("Failed to update measurements for sensor {} ({}). Sensor status will be set to offline.".format(sensor['id'], str(error)))
           else:
-            reading['value'] = value
-          self.info("Publishing reading for sensor {}: {}".format(sensor['name'], ", ".join(['{0}={1}'.format(k, v) for k,v in reading.items()])))
-          self.publish_message(topic="sensors/{}/state".format(sensor['id']), payload=json.dumps(reading))
-      time.sleep(self.config['update_period'])
+            self.publish_message(topic=status_topic, payload="online")
+            reading['timestamp'] = datetime.now().isoformat(timespec='seconds')
+            # Apply any offset correction and round value for output
+            if value is not None and not isinstance(value, (bool, str)):
+              if sensor['device_offset'] is not None:
+                value += sensor['device_offset']
+              reading['value'] = round(value, sensor['output_precision'])
+            else:
+              reading['value'] = value
+            self.info(" ↪ Sensor {}: {}{}".format(sensor['name'], reading['value'], sensor['units'] if sensor['units'] is not None else ''))
+            self.publish_message(topic="sensors/{}/state".format(sensor['id']), payload=json.dumps(reading))
+      except Exception as e:
+        self.error("Error updating sensors: {}".format(str(e)))
 
   def publish_attributes(self, sensor):
     self.info("Publishing attributes for sensor {}".format(sensor['name']))
@@ -288,14 +290,15 @@ class PiKVMHASensors:
     config_data['expire_after']           = self.config['valid_time']
     self.publish_message(topic=config_topic, payload=json.dumps(config_data, indent=2), qos=1, retain=True)
 
-
   def start(self):
     for sensor in self.sensors:
       self.init_sensor(sensor)
-    self.worker = Thread(target=self.update)
-    self.worker.daemon = True
-    self.worker.start()
     self.mqtt_connect()
+    time.sleep(2)
+    while True:
+      self.info("Timestamp: {}".format(datetime.now().isoformat(timespec='seconds')))
+      self.update()
+      time.sleep(self.config['update_period'])
 
 
 def main(args):
@@ -307,7 +310,7 @@ def main(args):
   try:
     with open(file, 'r') as yamlconfig:
       config = yaml.safe_load(yamlconfig)
-  except Exception as e:
+  except (IOError, yaml.YAMLError) as e:
     sys.exit("ERROR: {}".format(str(e)))
 
   sensors = []
@@ -318,11 +321,14 @@ def main(args):
   try:
     with open(file, 'r') as yamlsensors:
       sensors = yaml.safe_load(yamlsensors)
-  except Exception as e:
+  except (IOError, yaml.YAMLError) as e:
     sys.exit("ERROR: {}".format(str(e)))
   
-  pikvmha = PiKVMHASensors(config, sensors)
-  pikvmha.start()
+  try:
+    pikvmha = PiKVMHASensors(config, sensors)
+    pikvmha.start()
+  except (KeyboardInterrupt, SystemExit) as e:
+    sys.exit("ERROR: {}".format(str(e)))
 
 if __name__ == "__main__":
   main(sys.argv[1:])
