@@ -83,7 +83,7 @@ class sysinfo():
         os.system('rw')
         pacman.refresh()
         packages = pacman.get_installed()
-        upgradable = list(filter(lambda p: p['id'] in self.pikvm_arch_packages and p['upgradable'] is True, packages))
+        upgradable = list(filter(lambda p: p['id'] in self.pikvm_arch_packages and p['upgradable'] is not False, packages))
         self.update_check_value = "ON" if len(upgradable) > 0 else "OFF"
         self.update_check_timestamp = datetime.now()
         os.system('ro')
