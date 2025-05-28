@@ -2,7 +2,7 @@ RPi.GPIO
 paho-mqtt
 pyyaml
 retrying
-w1thermsensor>=2.*
+w1thermsensor>=2.0
 adafruit-circuitpython-htu21d
 netifaces
 psutil
