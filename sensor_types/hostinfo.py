@@ -11,9 +11,8 @@ class hostinfo():
   model = ''
   prom2json_path = "/root/go/bin/prom2json"
   url = ''
-  metrics = {}
-  metrics_timestamp = datetime.fromisoformat("2023-01-01T00:00")
   metrics_cache_expiry_seconds = 10
+  _metrics_cache = {}
 
   def __init__(self, config, addr: Optional[str] = None):
     self.url = config['prometheus_url']
@@ -24,10 +23,21 @@ class hostinfo():
 
   def read_prom_metrics(self):
     try:
-      if (datetime.now() - self.metrics_timestamp).total_seconds() > self.metrics_cache_expiry_seconds:
+      if self.url not in self._metrics_cache:
+        self._metrics_cache[self.url] = {
+          'timestamp': datetime.fromisoformat("2023-01-01T00:00"),
+          'data': {}
+        }
+      
+      cache = self._metrics_cache[self.url]
+      
+      if (datetime.now() - cache['timestamp']).total_seconds() > self.metrics_cache_expiry_seconds:
         result = subprocess.run([self.prom2json_path, self.url], timeout=10, capture_output=True, text=True, check=True)
-        self.metrics = json.loads(result.stdout)
-        self.metrics_timestamp = datetime.now()
+        cache['data'] = json.loads(result.stdout)
+        cache['timestamp'] = datetime.now()
+      
+      self.metrics = cache['data']
+
     except (FileNotFoundError, TimeoutExpired, CalledProcessError) as error:
       raise MeasurementError(str(error))
 
