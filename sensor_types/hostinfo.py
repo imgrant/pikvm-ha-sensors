@@ -1,25 +1,24 @@
-import time, subprocess, json
-from subprocess import CalledProcessError, TimeoutExpired
-from json import JSONDecodeError
+import time, requests
 from typing import Optional
 from datetime import datetime
+from prometheus_client import parser
 from .measurementerror import MeasurementError
 
 class hostinfo():
 
   manufacturer = ''
   model = ''
-  prom2json_path = "/root/go/bin/prom2json"
   url = ''
-  metrics_cache_expiry_seconds = 10
+  metrics_cache_expiry_seconds = 5
   _metrics_cache = {}
 
   def __init__(self, config, addr: Optional[str] = None):
     self.url = config['prometheus_url']
     self.read_prom_metrics()
-    dmi = list(filter(lambda m: m['name'] == 'node_dmi_info', self.metrics))[0]['metrics'][0]['labels']
-    self.manufacturer = dmi['system_vendor']
-    self.model = dmi['board_name']
+    dmi_family = self.metrics['node_dmi_info']
+    dmi_labels = dmi_family.samples[0].labels
+    self.manufacturer = dmi_labels['system_vendor']
+    self.model = dmi_labels['board_name']
 
   def read_prom_metrics(self):
     try:
@@ -32,13 +31,18 @@ class hostinfo():
       cache = self._metrics_cache[self.url]
       
       if (datetime.now() - cache['timestamp']).total_seconds() > self.metrics_cache_expiry_seconds:
-        result = subprocess.run([self.prom2json_path, self.url], timeout=10, capture_output=True, text=True, check=True)
-        cache['data'] = json.loads(result.stdout)
+        response = requests.get(self.url, timeout=10)
+        response.raise_for_status()
+        parsed_metrics = {
+            family.name: family 
+            for family in parser.text_string_to_metric_families(response.text)
+        }
+        cache['data'] = parsed_metrics
         cache['timestamp'] = datetime.now()
       
       self.metrics = cache['data']
 
-    except (FileNotFoundError, TimeoutExpired, CalledProcessError) as error:
+    except (requests.RequestException, StopIteration) as error:
       raise MeasurementError(str(error))
 
   @property
@@ -94,9 +98,15 @@ class hostinfo():
 
   def _get_metric_value(self, sensor, chip, metric):
     self.read_prom_metrics()
-    node_metrics = list(filter(lambda n: n['name'] == metric, self.metrics))[0]['metrics']
-    sensor_metric = list(filter(lambda m: m['labels']['chip'] == chip and m['labels']['sensor'] == sensor, node_metrics))[0]
-    return sensor_metric['value']
+    if metric not in self.metrics:
+        raise MeasurementError(f"Metric {metric} not found")
+        
+    family = self.metrics[metric]
+    for sample in family.samples:
+        if sample.labels.get('chip') == chip and sample.labels.get('sensor') == sensor:
+            return sample.value
+            
+    raise MeasurementError(f"Metric {metric} with chip={chip} sensor={sensor} not found")
 
   @property
   def serial_number(self):

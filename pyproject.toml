@@ -1,0 +1,23 @@
+[project]
+name = "pikvm-ha-sensors"
+version = "0.2.0"
+description = "A Python script for collecting sensor information running on PiKVM, and exporting to Home Assistant."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "RPi.GPIO ; sys_platform == 'linux'",
+    "paho-mqtt",
+    "pyyaml",
+    "retrying",
+    "w1thermsensor>=2.0",
+    "adafruit-circuitpython-htu21d",
+    "netifaces",
+    "psutil",
+    "python-pacman ; sys_platform == 'linux'",
+    "prometheus-client",
+    "requests",
+]
+
+[tool.uv]
+system-site-packages = true
+package = false
