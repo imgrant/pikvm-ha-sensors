@@ -22,10 +22,10 @@ dev = [
     # kvmd is out of date on PyPI, the others include binary
     # components which won't work in the venv on a PiKVM
     # because the filesystem is mounted noexec.
-    "kvmd",
+    "kvmd>=4",
     "netifaces",
     "psutil",
-    "RPi.GPIO",
+    "RPi.GPIO ; sys_platform == 'linux'",
 ]
 
 [tool.uv]
