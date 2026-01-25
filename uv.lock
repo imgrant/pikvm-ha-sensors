@@ -283,6 +283,11 @@ wheels = [
 ]
 
 [[package]]
+name = "kvmd"
+version = "4.132"
+source = { git = "https://github.com/pikvm/kvmd.git?rev=v4.132#da01ba93af6cb909d04905e5e7f3025ff7d4301b" }
+
+[[package]]
 name = "netifaces"
 version = "0.11.0"
 source = { registry = "https://pypi.org/simple" }
@@ -305,35 +310,45 @@ wheels = [
 
 [[package]]
 name = "pikvm-ha-sensors"
-version = "0.1.0"
+version = "0.3.0"
 source = { virtual = "." }
 dependencies = [
     { name = "adafruit-circuitpython-htu21d" },
-    { name = "netifaces" },
     { name = "paho-mqtt" },
     { name = "prometheus-client" },
-    { name = "psutil" },
     { name = "python-pacman", marker = "sys_platform == 'linux'" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "retrying" },
-    { name = "rpi-gpio", marker = "sys_platform == 'linux'" },
     { name = "w1thermsensor" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "kvmd" },
+    { name = "netifaces" },
+    { name = "psutil" },
+    { name = "rpi-gpio", marker = "sys_platform == 'linux'" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "adafruit-circuitpython-htu21d" },
-    { name = "netifaces" },
     { name = "paho-mqtt" },
     { name = "prometheus-client" },
-    { name = "psutil" },
     { name = "python-pacman", marker = "sys_platform == 'linux'" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "retrying" },
-    { name = "rpi-gpio", marker = "sys_platform == 'linux'" },
     { name = "w1thermsensor", specifier = ">=2.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "kvmd", git = "https://github.com/pikvm/kvmd.git?rev=v4.132" },
+    { name = "netifaces" },
+    { name = "psutil" },
+    { name = "rpi-gpio", marker = "sys_platform == 'linux'" },
 ]
 
 [[package]]
