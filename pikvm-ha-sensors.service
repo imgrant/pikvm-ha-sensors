@@ -7,7 +7,7 @@ Type=simple
 Restart=always
 RestartSec=5
 WorkingDirectory=/var/lib/kvmd/pst/data/pikvm-ha-sensors
-ExecStart=/usr/bin/uv run --no-sync pikvm-ha-sensors.py
+ExecStart=/usr/bin/uv run --no-sync --no-cache pikvm-ha-sensors.py
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
