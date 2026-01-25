@@ -19,5 +19,4 @@ dependencies = [
 ]
 
 [tool.uv]
-system-site-packages = true
 package = false
