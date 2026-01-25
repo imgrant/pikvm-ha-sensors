@@ -1,21 +1,31 @@
 [project]
 name = "pikvm-ha-sensors"
-version = "0.2.0"
+version = "0.3.0"
 description = "A Python script for collecting sensor information running on PiKVM, and exporting to Home Assistant."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "RPi.GPIO ; sys_platform == 'linux'",
     "paho-mqtt",
     "pyyaml",
     "retrying",
     "w1thermsensor>=2.0",
     "adafruit-circuitpython-htu21d",
-    "netifaces",
-    "psutil",
     "python-pacman ; sys_platform == 'linux'",
     "prometheus-client",
     "requests",
+]
+
+[dependency-groups]
+dev = [
+    # Don't install these packages with uv on a real PiKVM —
+    # they're already available via the system site-packages.
+    # kvmd is out of date on PyPI, the others include binary
+    # components which won't work in the venv on a PiKVM
+    # because the filesystem is mounted noexec.
+    "kvmd",
+    "netifaces",
+    "psutil",
+    "RPi.GPIO",
 ]
 
 [tool.uv]

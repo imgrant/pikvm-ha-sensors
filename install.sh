@@ -15,7 +15,7 @@ git archive HEAD | tar -x -C $INSTALL_DIR \
   --exclude='*.md' \
   --exclude='.vscode' \
 
-uv sync --directory $INSTALL_DIR
+uv sync --no-dev --directory $INSTALL_DIR
 
 cp pikvm-ha-sensors.service /etc/systemd/system/
 systemctl daemon-reload
