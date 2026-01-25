@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "paho-mqtt",
-    "pyyaml",
     "retrying",
     "w1thermsensor>=2.0",
     "adafruit-circuitpython-htu21d",
@@ -25,6 +24,7 @@ dev = [
     "kvmd @ git+https://github.com/pikvm/kvmd.git@v4.132",
     "netifaces",
     "psutil",
+    "pyyaml",
     "RPi.GPIO ; sys_platform == 'linux'",
 ]
 
