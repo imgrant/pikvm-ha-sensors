@@ -6,19 +6,28 @@ from .measurementerror import MeasurementError
 
 class hostinfo():
 
-  manufacturer = ''
-  model = ''
   url = ''
   metrics_cache_expiry_seconds = 5
   _metrics_cache = {}
 
   def __init__(self, config, addr: Optional[str] = None):
     self.url = config['prometheus_url']
-    self.read_prom_metrics()
-    dmi_family = self.metrics['node_dmi_info']
-    dmi_labels = dmi_family.samples[0].labels
-    self.manufacturer = dmi_labels['system_vendor']
-    self.model = dmi_labels['board_name']
+    self.metrics = {}
+
+  @property
+  def manufacturer(self):
+    return self._dmi_label('system_vendor')
+
+  @property
+  def model(self):
+    return self._dmi_label('board_name')
+
+  def _dmi_label(self, label):
+    try:
+      self.read_prom_metrics()
+      return self.metrics['node_dmi_info'].samples[0].labels[label]
+    except (MeasurementError, KeyError, IndexError):
+      return ''
 
   def read_prom_metrics(self):
     try:
