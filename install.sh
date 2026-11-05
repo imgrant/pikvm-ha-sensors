@@ -16,5 +16,17 @@ git archive HEAD | tar -x -C $INSTALL_DIR \
 PSTRUN="" /bin/bash "$INSTALL_DIR/sync-venv.sh"
 uv sync
 
-cp pikvm-ha-sensors.service /etc/systemd/system/
-systemctl daemon-reload
+install_service() {
+  cp pikvm-ha-sensors.service /etc/systemd/system/
+  systemctl daemon-reload
+}
+
+# kvmd-pstrun grants write access to persistent storage only, not to the root
+# filesystem holding /etc.
+if [ -w /etc/systemd/system ]; then
+  install_service
+else
+  rw
+  install_service
+  ro
+fi
