@@ -4,6 +4,7 @@ from .measurementerror import MeasurementError
 
 IIO_DEVICES_PATH = Path("/sys/bus/iio/devices")
 IIO_DEVICE_NAME = "htu21"
+I2C_ADDRESS = 0x40
 MILLI_UNITS_PER_UNIT = 1000
 
 
@@ -12,7 +13,8 @@ class htu21d():
   manufacturer = 'Measurement Specialities'
   model = 'HTU21D'
 
-  def __init__(self, addr: Optional[int] = None, config: Optional[dict] = None):
+  def __init__(self, addr: Optional[int] = I2C_ADDRESS, config: Optional[dict] = None):
+    self._address = I2C_ADDRESS if addr is None else int(addr)
     self._device = None
 
   @property
@@ -40,13 +42,17 @@ class htu21d():
       self._device = self._find_device()
     return self._device
 
-  @staticmethod
-  def _find_device():
+  def _find_device(self):
+    """Locate the IIO device for the htu21 bound at this I2C address."""
+    suffix = "-{address:04x}".format(address=self._address)
     for candidate in sorted(IIO_DEVICES_PATH.glob("iio:device*")):
       try:
-        if (candidate / "name").read_text().strip() == IIO_DEVICE_NAME:
+        if (candidate / "name").read_text().strip() != IIO_DEVICE_NAME:
+          continue
+        if candidate.resolve().parent.name.endswith(suffix):
           return candidate
       except OSError:
         continue
     raise MeasurementError(
-      "No {name} device found under {path}".format(name=IIO_DEVICE_NAME, path=IIO_DEVICES_PATH))
+      "No {name} device at I2C address 0x{address:02x} under {path}".format(
+        name=IIO_DEVICE_NAME, address=self._address, path=IIO_DEVICES_PATH))
