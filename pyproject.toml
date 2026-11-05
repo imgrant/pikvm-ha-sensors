@@ -8,7 +8,6 @@ dependencies = [
     "paho-mqtt",
     "retrying",
     "w1thermsensor>=2.0",
-    "adafruit-circuitpython-htu21d",
     "python-pacman ; sys_platform == 'linux'",
     "prometheus-client",
     "requests",

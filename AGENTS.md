@@ -80,7 +80,7 @@ uv run pikvm-ha-sensors.py [config.yaml] [sensors.yaml]
 
 ### Sensor Types
 
-- **`htu21d`**: I2C humidity/temperature sensor (inherits from Adafruit library)
+- **`htu21d`**: I2C humidity/temperature sensor, read through the kernel `htu21` IIO driver under `/sys/bus/iio/devices` (requires `dtoverlay=i2c-sensor,htu21` in `/boot/config.txt`)
 - **`ds18b20`**: 1-Wire temperature sensor (uses w1thermsensor library)
 - **`kvmd`**: Queries PiKVM's local API for ATX power state
 - **`sysinfo`**: System metrics (CPU temp, load average, boot time, package updates) using psutil and python-pacman
