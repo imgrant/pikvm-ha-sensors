@@ -1,12 +1,14 @@
 [Unit]
 Description=PiKVM Home Assistant sensor integration
-After=multi-user.target
+After=multi-user.target network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 Restart=always
 RestartSec=5
 WorkingDirectory=/var/lib/kvmd/pst/data/pikvm-ha-sensors
+ExecStartPre=-/bin/bash /var/lib/kvmd/pst/data/pikvm-ha-sensors/sync-venv.sh
 ExecStart=/usr/bin/uv run pikvm-ha-sensors.py
 Environment=PYTHONUNBUFFERED=1
 Environment=UV_WORKING_DIR=/var/lib/kvmd/pst/data/pikvm-ha-sensors

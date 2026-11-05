@@ -18,6 +18,24 @@ Configuration and installation is handled by `install.sh`. This script will:
 2. Create/update the virtual environment and sync dependencies using `uv sync`.
 3. Install and reload the systemd service.
 
+### Surviving a Python upgrade
+
+A virtual environment is tied to the Python minor version it was built with. When
+PiKVM upgrades `python`, the deployed environment stops matching and every import
+fails. `sync-venv.sh` detects this and rebuilds the environment; the service runs
+it before each start, and `install.sh` runs it during deployment.
+
+The rebuild needs write access to persistent storage and a network connection,
+because some dependencies ship interpreter-specific binary wheels. If either is
+unavailable the service keeps retrying until the rebuild succeeds.
+
+> [!NOTE]
+> Run the script by hand with `--dry-run` to check whether a rebuild is pending:
+> ```bash
+> kvmd-pstrun -- /bin/bash /var/lib/kvmd/pst/data/pikvm-ha-sensors/sync-venv.sh --dry-run
+> ```
+
+
 Run the script using the `kvmd-pstrun` wrapper to ensure write access to persistent storage:
 
 ```bash
