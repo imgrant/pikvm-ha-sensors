@@ -99,6 +99,21 @@ class hostinfo():
     """The host PCH temperature, in °C."""
     return self.get_temp(sensor="temp4", chip="platform_nct6683_2592")
 
+  @property
+  def host_socket_temperature(self):
+    """The host CPU socket temperature, in °C."""
+    return self.get_temp(sensor="temp5", chip="platform_nct6683_2592")
+
+  @property
+  def host_pcie_temperature(self):
+    """The host PCIe x1 slot temperature, in °C."""
+    return self.get_temp(sensor="temp6", chip="platform_nct6683_2592")
+
+  @property
+  def host_m2_temperature(self):
+    """The host M.2 slot 1 temperature, in °C."""
+    return self.get_temp(sensor="temp7", chip="platform_nct6683_2592")
+
   def get_fan_speed(self, fan = "fan1", chip: Optional[str] = "platform_nct6683_2592"):
     return self._get_metric_value(fan, chip, 'node_hwmon_fan_rpm')
   
