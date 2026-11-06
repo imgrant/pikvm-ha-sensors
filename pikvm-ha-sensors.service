@@ -6,6 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 Restart=always
+SuccessExitStatus=143
 RestartSec=5
 WorkingDirectory=/var/lib/kvmd/pst/data/pikvm-ha-sensors
 ExecStartPre=-/bin/bash /var/lib/kvmd/pst/data/pikvm-ha-sensors/bind-sensor.sh
