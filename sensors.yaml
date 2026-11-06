@@ -155,16 +155,6 @@
   ha_device_class:    "temperature"
   ha_entity_category: "diagnostic"
   ha_title:           "Host PCIe Slot Temperature"
-- name:               "host_m2_temperature"
-  device_type:        "hostinfo"
-  device_property:    "host_m2_temperature"
-  units:              "°C"
-  output_precision:   2
-  display_precision:  1
-  ha_component_type:  "sensor"
-  ha_device_class:    "temperature"
-  ha_entity_category: "diagnostic"
-  ha_title:           "Host M.2 Slot Temperature"
 - name:               "cpu_fan_speed"
   device_type:        "hostinfo"
   device_property:    "cpu_fan_speed"

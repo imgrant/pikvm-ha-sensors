@@ -113,11 +113,6 @@ class hostinfo():
     """The host PCIe x1 slot temperature, in °C."""
     return self.get_temp(sensor="temp6", chip=SUPERIO_CHIP)
 
-  @property
-  def host_m2_temperature(self):
-    """The host M.2 slot 1 temperature, in °C."""
-    return self.get_temp(sensor="temp7", chip=SUPERIO_CHIP)
-
   def get_fan_speed(self, fan = "fan1", chip: Optional[str] = SUPERIO_CHIP):
     return self._get_metric_value(fan, chip, 'node_hwmon_fan_rpm')
   
