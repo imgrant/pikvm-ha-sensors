@@ -18,6 +18,29 @@ Configuration and installation is handled by `install.sh`. This script will:
 2. Create/update the virtual environment and sync dependencies using `uv sync`.
 3. Install and reload the systemd service.
 
+### Binding the HTU21D at boot
+
+The kernel's `htu21` driver abandons its probe after a single failed I2C
+transaction, which happens on most PiKVM boots:
+
+```
+htu21 1-0040: Failed to reset device
+htu21 1-0040: probe with driver htu21 failed with error -5
+```
+
+The chip is fine; it just has no IIO device, so the temperature and humidity
+sensors report as unavailable. `bind-sensor.sh` binds the driver by hand, and
+the service runs it before each start. Readings resume on the next update
+cycle without a restart.
+
+```bash
+kvmd-pstrun -- /bin/bash /var/lib/kvmd/pst/data/pikvm-ha-sensors/bind-sensor.sh
+```
+
+> [!NOTE]
+> Set `DRIVER` and `I2C_DEVICE` to bind something other than the HTU21D at
+> `1-0040`. Pass `--dry-run` to report whether a bind is pending.
+
 ### Surviving a Python upgrade
 
 A virtual environment is tied to the Python minor version it was built with. When

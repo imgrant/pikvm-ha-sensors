@@ -158,6 +158,7 @@ The application reads `sensors.yaml` by default, or accepts a path as the second
 - Persistent storage is at `/var/lib/kvmd/pst/data/pikvm-ha-sensors`
 - The PiKVM filesystem is read-only, use `kvmd-pstrun --` wrapper to run commands in a write-access-enabled window. Alternatively, manual `rw`/`ro` commands can be used to make the filesystem read-write or read-only.
 - `install.sh` uses `git archive` to deploy (excludes samples and itself, including the .git dir) the code from a checked out git repo to the persistent location (both must be on the PiKVM).
+- `bind-sensor.sh` binds an I2C driver that failed to probe at boot. The `htu21` driver gives up after one failed transaction, so the HTU21D usually has no IIO device until it is bound by hand. The service runs it as a non-fatal `ExecStartPre`.
 - `sync-venv.sh` rebuilds `.venv` when `/usr/bin/python3` no longer matches the `version_info` recorded in `.venv/pyvenv.cfg`. The service runs it as a non-fatal `ExecStartPre`, and `install.sh` runs it with `PSTRUN=""` because it is already inside a PST session. The persistent filesystem is `noexec`, so it must be invoked as `/bin/bash sync-venv.sh`.
 - `pyproject.toml` enables `system-site-packages = true` to access system-installed hardware libraries (the `kvmd` Python module is installed via PiKVM OS packages, not PyPI).
 - Some dependencies (RPi.GPIO, python-pacman) are Linux-only via platform markers.

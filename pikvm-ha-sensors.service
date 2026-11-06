@@ -8,6 +8,7 @@ Type=simple
 Restart=always
 RestartSec=5
 WorkingDirectory=/var/lib/kvmd/pst/data/pikvm-ha-sensors
+ExecStartPre=-/bin/bash /var/lib/kvmd/pst/data/pikvm-ha-sensors/bind-sensor.sh
 ExecStartPre=-/bin/bash /var/lib/kvmd/pst/data/pikvm-ha-sensors/sync-venv.sh
 ExecStart=/usr/bin/uv run pikvm-ha-sensors.py
 Environment=PYTHONUNBUFFERED=1
