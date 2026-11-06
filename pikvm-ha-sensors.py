@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys, socket
+import sys, socket, argparse
 import netifaces
 import json, yaml, time
 import re, uuid
@@ -134,6 +134,7 @@ class PiKVMHASensors:
     self.mqtt_client     = None
     self.mqtt_connected  = False
     self.ha_registered   = False
+    self.purge_mode      = False
     self.worker          = None
     self.device_info['connections'] = [
                                         [ "mac_address", ':'.join(re.findall('..', '%012x' % uuid.getnode())).lower() ],
@@ -186,6 +187,10 @@ class PiKVMHASensors:
   def mqtt_on_connect(self, mqtt_client, userdata, flags, rc):
     self.mqtt_connected = True
     self.info('MQTT broker connected.')
+    if self.purge_mode:
+      for sensor in self.sensors:
+        self.purge_ha_discovery(sensor)
+      return
     if self.ha_registered is False:
       for sensor in self.sensors:
         self.publish_ha_discovery(sensor)
@@ -196,6 +201,8 @@ class PiKVMHASensors:
   def mqtt_on_disconnect(self, mqtt_client, userdata, rc):
     self.mqtt_connected = False
     self.info('MQTT broker disconnected!')
+    if self.purge_mode:
+      return
     if rc == 0:
       self.mqtt_connect()
     else:
@@ -262,13 +269,21 @@ class PiKVMHASensors:
     attr_data['manufacturer']   = sensor['instance'].manufacturer
     self.publish_message(topic="sensors/{}/attributes".format(sensor['id']), payload=json.dumps(attr_data, indent=2), qos=1, retain=True)
 
-  def publish_ha_discovery(self, sensor):
-    self.info("Registering sensor {} with Home Assistant".format(sensor['name']))
-    config_topic = "{prefix}/{component}/{node}/{object}/config".format(
+  def ha_config_topic(self, sensor):
+    return "{prefix}/{component}/{node}/{object}/config".format(
                                                           prefix=self.config['mqtt_ha_prefix'],
                                                           component=sensor['ha_component_type'],
                                                           node=self.unique_id,
                                                           object=sensor['name'])
+
+  def purge_ha_discovery(self, sensor):
+    self.info("Removing sensor {} from Home Assistant".format(sensor['name']))
+    self.publish_message(topic=self.ha_config_topic(sensor), payload="", qos=1, retain=True)
+    self.publish_message(topic="sensors/{}/attributes".format(sensor['id']), payload="", qos=1, retain=True)
+
+  def publish_ha_discovery(self, sensor):
+    self.info("Registering sensor {} with Home Assistant".format(sensor['name']))
+    config_topic = self.ha_config_topic(sensor)
     config_data = {}
     config_data['unique_id']              = sensor['id']
     config_data['state_topic']            = "sensors/{}/state".format(sensor['id'])
@@ -294,6 +309,14 @@ class PiKVMHASensors:
     config_data['expire_after']           = self.config['valid_time']
     self.publish_message(topic=config_topic, payload=json.dumps(config_data, indent=2), qos=1, retain=True)
 
+  def purge(self):
+    self.purge_mode = True
+    self.mqtt_connect()
+    time.sleep(2)
+    self.mqtt_client.disconnect()
+    self.mqtt_client.loop_stop()
+    print("Cleared Home Assistant discovery for {} entities.".format(len(self.sensors)))
+
   def start(self):
     for sensor in self.sensors:
       self.init_sensor(sensor)
@@ -305,32 +328,34 @@ class PiKVMHASensors:
       time.sleep(self.config['update_period'])
 
 
-def main(args):
-  config = {}
-  if len(args) > 0:
-    file = args[0]
-  else:
-    file = "config.yaml"
+def load_yaml(file):
   try:
-    with open(file, 'r') as yamlconfig:
-      config = yaml.safe_load(yamlconfig)
+    with open(file, 'r') as handle:
+      return yaml.safe_load(handle)
   except (IOError, yaml.YAMLError) as e:
     sys.exit("ERROR: {}".format(str(e)))
 
-  sensors = []
-  if len(args) > 1:
-    file = args[1]
-  else:
-    file = "sensors.yaml"
-  try:
-    with open(file, 'r') as yamlsensors:
-      sensors = yaml.safe_load(yamlsensors)
-  except (IOError, yaml.YAMLError) as e:
-    sys.exit("ERROR: {}".format(str(e)))
-  
+def main(argv):
+  parser = argparse.ArgumentParser(
+    prog='pikvm-ha-sensors',
+    description='Collects PiKVM sensor readings and publishes them to Home Assistant over MQTT.')
+  parser.add_argument('config', nargs='?', default='config.yaml',
+                      help='application configuration file (default: config.yaml)')
+  parser.add_argument('sensors', nargs='?', default='sensors.yaml',
+                      help='sensor definition file (default: sensors.yaml)')
+  parser.add_argument('--purge', action='store_true',
+                      help='clear the retained discovery topics, removing every entity from Home Assistant, then exit')
+  args = parser.parse_args(argv)
+
+  config = load_yaml(args.config)
+  sensors = load_yaml(args.sensors)
+
   try:
     pikvmha = PiKVMHASensors(config, sensors)
-    pikvmha.start()
+    if args.purge:
+      pikvmha.purge()
+    else:
+      pikvmha.start()
   except (KeyboardInterrupt, SystemExit) as e:
     sys.exit("ERROR: {}".format(str(e)))
 

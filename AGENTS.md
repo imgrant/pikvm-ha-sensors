@@ -51,7 +51,16 @@ uv sync
 
 # Run the application directly
 uv run pikvm-ha-sensors.py [config.yaml] [sensors.yaml]
+
+# Clear the retained discovery topics, removing every entity from Home Assistant
+uv run pikvm-ha-sensors.py --purge
 ```
+
+`--purge` publishes an empty retained payload to each `config` and `attributes`
+topic, which is what makes Home Assistant drop the entities. Deleting the device
+in the Home Assistant UI alone does not work, because the retained discovery
+messages recreate it. Restarting the service republishes everything, and Home
+Assistant assigns fresh entity IDs.
 
 ## Architecture
 

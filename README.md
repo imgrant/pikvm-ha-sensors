@@ -86,6 +86,24 @@ After installation, start/stop the service using systemd:
 systemctl start pivkm-ha-sensors
 ```
 
+### Removing the entities from Home Assistant
+
+The discovery topics are retained, so deleting the device in the Home Assistant
+UI is not enough — Home Assistant recreates it from the retained messages when it
+next subscribes. Clear them first, then restart the service to register
+everything again:
+
+```
+systemctl stop pikvm-ha-sensors
+uv run pikvm-ha-sensors.py --purge
+systemctl start pikvm-ha-sensors
+```
+
+> [!NOTE]
+> Entity IDs are assigned by Home Assistant the first time it sees a sensor, and
+> keeping them is its decision, not this program's. Purging is the way to make
+> Home Assistant reassign them, at the cost of the recorded history.
+
 Output is logged to the system journal:
 
 ```
