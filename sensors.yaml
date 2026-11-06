@@ -9,7 +9,7 @@
   ha_component_type:  "sensor"
   ha_device_class:    "temperature"
   ha_icon:            "mdi:thermometer-lines"
-  ha_title:           "Internal Temperature"
+  ha_title:           "Internal Air Temperature"
 - name:               "chassis_humidity"
   device_type:        "htu21d"
   device_address:     0x40
@@ -19,7 +19,7 @@
   display_precision:  0
   ha_component_type:  "sensor"
   ha_device_class:    "humidity"
-  ha_title:           "Internal Humidity"
+  ha_title:           "Internal Air Humidity"
 - name:               "water_temperature"
   device_type:        "ds18b20"
   device_address:     "0621b1925673"
