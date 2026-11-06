@@ -115,6 +115,7 @@ class PiKVMHASensors:
     'display_precision':  None,
     'ha_component_type':  None,
     'ha_device_class':    None,
+    'ha_state_class':     'measurement',
     'ha_entity_category': None,
     'ha_icon':            None,
     'ha_title':           None
@@ -275,6 +276,8 @@ class PiKVMHASensors:
     config_data['device']                 = self.device_info
     if sensor['ha_device_class'] is not None:
       config_data['device_class']           = sensor['ha_device_class']
+    if sensor['ha_component_type'] == 'sensor' and sensor['ha_state_class'] is not None:
+      config_data['state_class']            = sensor['ha_state_class']
     if sensor['ha_icon'] is not None:
       config_data['icon']                   = sensor['ha_icon']
     if sensor['ha_entity_category'] is not None:

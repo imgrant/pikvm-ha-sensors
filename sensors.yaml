@@ -75,6 +75,7 @@
   device_property:    "boot_time"
   ha_component_type:  "sensor"
   ha_device_class:    "timestamp"
+  ha_state_class:     null
   ha_entity_category: "diagnostic"
   ha_title:           "Boot Time"
 - name:               "loadavg"

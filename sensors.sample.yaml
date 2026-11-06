@@ -9,6 +9,7 @@
   display_precision:  1             # Optional. number of decimals places to round to for display *in the Home Assistant frontend*. Use 0 for zero decimal places.
   ha_component_type:  "sensor"      # Required. HA component type such as 'sensor' or 'binary_sensor'
   ha_device_class:    "temperature" # Required. HA device class for the component type, e.g. 'temperature'
+  ha_state_class:     "measurement" # Optional. HA state class, needed for long-term statistics. Defaults to 'measurement'; use null for a timestamp or other non-measurement reading. Ignored for 'binary_sensor'.
   ha_entity_category: null          # Optional. null for a regular sensor, 'diagnostic' or 'config' to separate these readings in the HA device info
   ha_icon:            "mdi:thermometer" # Optional. Material icon to use in Home Assistant, null for device class default
   ha_title:           "Temperature" # Required. Friendly title for the entity in Home Assistant

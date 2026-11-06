@@ -136,6 +136,7 @@ Array of sensor definitions (see `sensors.sample.yaml` for annotated reference).
 - **`units`** (string/null): Unit of measurement (e.g., "°C", "%", "RPM")
 - **`output_precision`** (int/null): Decimal places to round published value. Use null to avoid rounding (e.g., for integers like RPM)
 - **`display_precision`** (int/null): Suggested decimal places for Home Assistant frontend display
+- **`ha_state_class`** (string/null): Home Assistant state class. Defaults to `"measurement"`, which is what makes Home Assistant record long-term statistics. Set it to null for a reading that is not a measurement, such as a timestamp. Ignored for `binary_sensor`.
 - **`ha_entity_category`** (string/null): Entity category - null for primary sensors, `"diagnostic"` for system info, `"config"` for settings
 - **`ha_icon`** (string/null): Material Design icon (e.g., "mdi:thermometer-lines", "mdi:fan"). Null uses device class default.
 
