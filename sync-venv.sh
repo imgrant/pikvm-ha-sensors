@@ -8,6 +8,8 @@ VERSION="0.4.0"
 INSTALL_DIR="${INSTALL_DIR:-/var/lib/kvmd/pst/data/pikvm-ha-sensors}"
 SYSTEM_PYTHON="${SYSTEM_PYTHON:-/usr/bin/python3}"
 PSTRUN="${PSTRUN-/usr/bin/kvmd-pstrun}"
+ATTEMPTS="${ATTEMPTS:-3}"
+RETRY_DELAY="${RETRY_DELAY:-10}"
 
 usage() {
   cat <<EOF
@@ -28,6 +30,8 @@ Environment:
   SYSTEM_PYTHON   Interpreter to build against (default: $SYSTEM_PYTHON)
   PSTRUN          PiKVM persistent storage wrapper (default: $PSTRUN).
                   Set it empty when already inside a PST session.
+  ATTEMPTS        Rebuild attempts before giving up (default: $ATTEMPTS)
+  RETRY_DELAY     Seconds between attempts (default: $RETRY_DELAY)
 
 Exit codes:
   0  The environment matches, or was rebuilt successfully
@@ -102,14 +106,25 @@ else
   wrapper=(/bin/bash -c "$rebuild")
 fi
 
-UV_NO_SYNC=false UV_OFFLINE=false UV_NO_CACHE=false \
-UV_CACHE_DIR="$INSTALL_DIR/.cache/uv" \
-  "${wrapper[@]}"
+attempt=1
+while true; do
+  UV_NO_SYNC=false UV_OFFLINE=false UV_NO_CACHE=false \
+  UV_CACHE_DIR="$INSTALL_DIR/.cache/uv" \
+    "${wrapper[@]}"
+  status=$?
 
-status=$?
-if [ "$status" -ne 0 ]; then
-  warn "rebuild failed (exit $status); the service will retry"
-  exit 1
-fi
+  if [ "$status" -eq 0 ]; then
+    info "virtual environment rebuilt for Python $system_version"
+    exit 0
+  fi
 
-info "virtual environment rebuilt for Python $system_version"
+  if [ "$attempt" -ge "$ATTEMPTS" ]; then
+    warn "rebuild failed after $attempt attempt(s) (exit $status); the service will retry"
+    exit 1
+  fi
+
+  # Another PST session, including its teardown, denies write access outright.
+  warn "rebuild attempt $attempt failed (exit $status); retrying in ${RETRY_DELAY}s"
+  sleep "$RETRY_DELAY"
+  attempt=$((attempt + 1))
+done
