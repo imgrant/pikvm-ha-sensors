@@ -5,6 +5,9 @@ from zoneinfo import ZoneInfo
 import pacman
 from .measurementerror import MeasurementError
 
+PACMAN_DB_LOCK = '/var/lib/pacman/db.lck'
+
+
 class sysinfo():
 
   manufacturer = 'Raspberry Pi'
@@ -74,6 +77,26 @@ class sysinfo():
     except Exception as error:
       raise MeasurementError(str(error))
 
+  @staticmethod
+  def clear_stale_pacman_lock():
+    """Remove a database lock left behind by a pacman run that was killed.
+
+    A restart during the update check kills pacman with its lock held, and
+    the lock outlives reboots because it sits on the root filesystem.
+    """
+    if not os.path.exists(PACMAN_DB_LOCK):
+      return
+
+    for process in psutil.process_iter(['name']):
+      if process.info['name'] == 'pacman':
+        return
+
+    try:
+      os.remove(PACMAN_DB_LOCK)
+      print("Removed stale pacman database lock {}".format(PACMAN_DB_LOCK))
+    except OSError as error:
+      print("Unable to remove stale pacman database lock {}: {}".format(PACMAN_DB_LOCK, error))
+
   @property
   def update_available(self):
     """Whether any OS packages for PiKVM have updates available."""
@@ -82,6 +105,7 @@ class sysinfo():
       if hours_since_last_check > self.update_check_interval_hours:
         os.system('rw')
         try:
+          self.clear_stale_pacman_lock()
           pacman.refresh()
           packages = pacman.get_installed()
           upgradable = list(filter(lambda p: p['id'] in self.pikvm_arch_packages and p['upgradable'] is not False, packages))
