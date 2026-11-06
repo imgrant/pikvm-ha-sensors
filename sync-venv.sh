@@ -64,11 +64,15 @@ warn() {
 }
 
 venv_python_version() {
-  sed -n 's/^version_info = \([0-9]\{1,\}\.[0-9]\{1,\}\).*/\1/p' "$INSTALL_DIR/.venv/pyvenv.cfg" 2>/dev/null
+  sed -n 's/^version_info = \([0-9.]\{1,\}\).*/\1/p' "$INSTALL_DIR/.venv/pyvenv.cfg" 2>/dev/null
 }
 
 system_python_version() {
-  "$SYSTEM_PYTHON" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null
+  "$SYSTEM_PYTHON" -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])' 2>/dev/null
+}
+
+venv_uses_system_site_packages() {
+  grep -q '^include-system-site-packages = true' "$INSTALL_DIR/.venv/pyvenv.cfg" 2>/dev/null
 }
 
 system_version=$(system_python_version)
@@ -79,15 +83,21 @@ fi
 
 venv_version=$(venv_python_version)
 
-if [ "$venv_version" = "$system_version" ]; then
+# uv recreates an environment whose interpreter differs by so much as a patch
+# release, and does so without system site packages, which the PiKVM needs for
+# kvmd and the GPIO libraries. Comparing the full version keeps that rebuild
+# here, where the flag is passed.
+if [ "$venv_version" = "$system_version" ] && venv_uses_system_site_packages; then
   info "virtual environment already matches Python $system_version"
   exit 0
 fi
 
 if [ -z "$venv_version" ]; then
   info "no usable virtual environment found; building against Python $system_version"
-else
+elif [ "$venv_version" != "$system_version" ]; then
   info "Python changed from $venv_version to $system_version; rebuilding the virtual environment"
+else
+  info "virtual environment lacks system site packages; rebuilding it"
 fi
 
 if $dry_run; then
