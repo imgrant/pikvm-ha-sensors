@@ -73,6 +73,7 @@ class PiKVMHASensors:
     'update_period':          30,
     'valid_time':             600,
     'verbose':                False,
+    'force_update':           False,
     'mqtt_broker':            None,  # Must be overridden
     'mqtt_port':              1883,
     'mqtt_transport':         'tcp',  # 'tcp' or 'websockets'
@@ -289,7 +290,7 @@ class PiKVMHASensors:
     if sensor['display_precision'] is not None:
       config_data['suggested_display_precision'] = sensor['display_precision']
     config_data['value_template']         = "{{{{ value_json.{field} }}}}".format(field='value')
-    config_data['force_update']           = True
+    config_data['force_update']           = self.config['force_update']
     config_data['expire_after']           = self.config['valid_time']
     self.publish_message(topic=config_topic, payload=json.dumps(config_data, indent=2), qos=1, retain=True)
 

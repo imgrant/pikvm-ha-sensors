@@ -105,6 +105,7 @@ Application-wide settings (see `config.sample.yaml` for reference):
 - **`update_period`** (int): Seconds between sensor reading cycles (default: 30)
 - **`valid_time`** (int): Seconds before Home Assistant marks sensor unavailable if no updates (default: 600)
 - **`verbose`** (bool): Enable detailed logging output (default: false)
+- **`force_update`** (bool): Ask Home Assistant to write a new state on every cycle, even when the value is unchanged (default: false). Leaving this off keeps the recorder small; `expire_after` still resets on each MQTT message.
 - **`mqtt_broker`** (string): MQTT broker hostname or IP address (required)
 - **`mqtt_port`** (int): MQTT broker port (default: 1883)
 - **`mqtt_transport`** (string): Transport protocol - `"tcp"` or `"websockets"` (default: "tcp")
