@@ -113,7 +113,6 @@
   display_precision:  1
   ha_component_type:  "sensor"
   ha_device_class:    "temperature"
-  ha_entity_category: "diagnostic"
   ha_title:           "Host System Temperature"
 - name:               "host_vrm_temperature"
   device_type:        "hostinfo"
@@ -162,7 +161,6 @@
   output_precision:   null
   display_precision:  0
   ha_component_type:  "sensor"
-  ha_entity_category: "diagnostic"
   ha_title:           "CPU Fan Speed"
   ha_icon:            "mdi:fan"
 - name:               "pump_speed"
@@ -172,7 +170,6 @@
   output_precision:   null
   display_precision:  0
   ha_component_type:  "sensor"
-  ha_entity_category: "diagnostic"
   ha_title:           "Pump Speed"
   ha_icon:            "mdi:pump"
 - name:               "system_fan_speed_1"
