@@ -86,6 +86,8 @@ class PiKVMHASensors:
     'prometheus_url':         None
   }
 
+  purge_wait_seconds = 5
+
   unique_id = 'pikvm_{}'.format(get_rpi_serial()[-6:]) # suffix is last six digits of serial number
   device_info = {
     'identifiers':        [
@@ -135,6 +137,7 @@ class PiKVMHASensors:
     self.mqtt_connected  = False
     self.ha_registered   = False
     self.purge_mode      = False
+    self.purged_topics   = set()
     self.worker          = None
     self.device_info['connections'] = [
                                         [ "mac_address", ':'.join(re.findall('..', '%012x' % uuid.getnode())).lower() ],
@@ -175,6 +178,7 @@ class PiKVMHASensors:
       if self.config['mqtt_use_tls'] is True:
         self.mqtt_client.tls_set()
       self.mqtt_client.on_connect = self.mqtt_on_connect
+      self.mqtt_client.on_message = self.mqtt_on_message
       self.mqtt_client.on_disconnect = self.mqtt_on_disconnect
       try:
         self.mqtt_client.connect(self.config['mqtt_broker'], int(self.config['mqtt_port']), 30)
@@ -188,8 +192,10 @@ class PiKVMHASensors:
     self.mqtt_connected = True
     self.info('MQTT broker connected.')
     if self.purge_mode:
-      for sensor in self.sensors:
-        self.purge_ha_discovery(sensor)
+      self.mqtt_client.subscribe([
+        ("{prefix}/+/{node}/+/config".format(prefix=self.config['mqtt_ha_prefix'], node=self.unique_id), 1),
+        ("sensors/+/attributes", 1)
+      ])
       return
     if self.ha_registered is False:
       for sensor in self.sensors:
@@ -197,6 +203,13 @@ class PiKVMHASensors:
       for sensor in self.sensors:
         self.publish_attributes(sensor)
       self.ha_registered = True
+
+  def mqtt_on_message(self, mqtt_client, userdata, message):
+    if not self.purge_mode or not message.retain or len(message.payload) == 0:
+      return
+    if message.topic.startswith('sensors/') and not message.topic.startswith("sensors/{}_".format(self.unique_id)):
+      return
+    self.purge_retained_topic(message.topic)
 
   def mqtt_on_disconnect(self, mqtt_client, userdata, rc):
     self.mqtt_connected = False
@@ -276,10 +289,12 @@ class PiKVMHASensors:
                                                           node=self.unique_id,
                                                           object=sensor['name'])
 
-  def purge_ha_discovery(self, sensor):
-    self.info("Removing sensor {} from Home Assistant".format(sensor['name']))
-    self.publish_message(topic=self.ha_config_topic(sensor), payload="", qos=1, retain=True)
-    self.publish_message(topic="sensors/{}/attributes".format(sensor['id']), payload="", qos=1, retain=True)
+  def purge_retained_topic(self, topic):
+    if topic in self.purged_topics:
+      return
+    self.info("Clearing retained topic {}".format(topic))
+    self.publish_message(topic=topic, payload="", qos=1, retain=True)
+    self.purged_topics.add(topic)
 
   def publish_ha_discovery(self, sensor):
     self.info("Registering sensor {} with Home Assistant".format(sensor['name']))
@@ -312,10 +327,10 @@ class PiKVMHASensors:
   def purge(self):
     self.purge_mode = True
     self.mqtt_connect()
-    time.sleep(2)
+    time.sleep(self.purge_wait_seconds)
     self.mqtt_client.disconnect()
     self.mqtt_client.loop_stop()
-    print("Cleared Home Assistant discovery for {} entities.".format(len(self.sensors)))
+    print("Cleared {} retained Home Assistant topics.".format(len(self.purged_topics)))
 
   def start(self):
     for sensor in self.sensors:

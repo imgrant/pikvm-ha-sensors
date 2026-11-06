@@ -56,11 +56,17 @@ uv run pikvm-ha-sensors.py [config.yaml] [sensors.yaml]
 uv run pikvm-ha-sensors.py --purge
 ```
 
-`--purge` publishes an empty retained payload to each `config` and `attributes`
-topic, which is what makes Home Assistant drop the entities. Deleting the device
-in the Home Assistant UI alone does not work, because the retained discovery
-messages recreate it. Restarting the service republishes everything, and Home
-Assistant assigns fresh entity IDs.
+`--purge` subscribes to `<mqtt_ha_prefix>/+/<unique_id>/+/config` and
+`sensors/+/attributes`, waits `purge_wait_seconds` for the broker to replay the
+retained messages, then publishes an empty retained payload to each one. Reading
+the topics from the broker rather than from `sensors.yaml` means it also clears
+entities orphaned by sensors that have been removed from the configuration.
+Deleting the device in the Home Assistant UI alone does not work, because the
+retained discovery messages recreate it.
+
+Purging does not change entity IDs. Home Assistant keys its entity registry on
+`unique_id` and restores the previous entity ID when the same sensor reappears,
+so entity IDs can only be changed in the Home Assistant UI.
 
 ## Architecture
 

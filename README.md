@@ -99,10 +99,14 @@ uv run pikvm-ha-sensors.py --purge
 systemctl start pikvm-ha-sensors
 ```
 
+`--purge` asks the broker for every retained topic under the device's discovery
+prefix, rather than working from `sensors.yaml`, so it also clears entities left
+behind by sensors that have since been removed from the configuration.
+
 > [!NOTE]
-> Entity IDs are assigned by Home Assistant the first time it sees a sensor, and
-> keeping them is its decision, not this program's. Purging is the way to make
-> Home Assistant reassign them, at the cost of the recorded history.
+> Purging does not rename anything. Home Assistant keeps an entity registry entry
+> keyed on `unique_id` and restores the previous entity ID when the same sensor
+> reappears, so entity IDs can only be changed in the Home Assistant UI.
 
 Output is logged to the system journal:
 
