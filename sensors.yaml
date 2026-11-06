@@ -215,4 +215,94 @@
   ha_entity_category: "diagnostic"
   ha_title:           "System Fan 3 Speed"
   ha_icon:            "mdi:fan-speed-3"
+- name:               "host_12v_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_12v_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host +12V Rail Voltage"
+- name:               "host_5v_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_5v_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host +5V Rail Voltage"
+- name:               "host_3v3_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_3v3_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host +3.3V Rail Voltage"
+- name:               "host_vcore_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_vcore_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host CPU Core Voltage"
+- name:               "host_soc_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_soc_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host CPU SoC Voltage"
+- name:               "host_dram_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_dram_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host DRAM Voltage"
+- name:               "host_chipset_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_chipset_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host Chipset Voltage"
+- name:               "host_vddp_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_vddp_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host CPU VDDP Voltage"
+- name:               "host_cpu_1v8_voltage"
+  device_type:        "hostinfo"
+  device_property:    "host_cpu_1v8_voltage"
+  units:              "V"
+  output_precision:   3
+  display_precision:  2
+  ha_component_type:  "sensor"
+  ha_device_class:    "voltage"
+  ha_entity_category: "diagnostic"
+  ha_title:           "Host CPU 1.8V Rail Voltage"
 ...

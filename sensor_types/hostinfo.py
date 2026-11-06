@@ -4,6 +4,10 @@ from datetime import datetime
 from prometheus_client import parser
 from .measurementerror import MeasurementError
 
+CPU_CHIP = "pci0000:00_0000:00:18_3"
+SUPERIO_CHIP = "platform_nct6683_2592"
+
+
 class hostinfo():
 
   url = ''
@@ -82,43 +86,51 @@ class hostinfo():
   @property
   def host_cpu_temperature(self):
     """The host CPU (AMD K10) temperature, in °C."""
-    return self.get_temp(sensor="temp1", chip="pci0000:00_0000:00:18_3")
+    return self.get_temp(sensor="temp1", chip=CPU_CHIP)
 
   @property
   def host_system_temperature(self):
     """The host 'system' temperature, in °C."""
-    return self.get_temp(sensor="temp2", chip="platform_nct6683_2592")
+    return self.get_temp(sensor="temp2", chip=SUPERIO_CHIP)
 
   @property
   def host_vrm_temperature(self):
     """The host VRM temperature, in °C."""
-    return self.get_temp(sensor="temp3", chip="platform_nct6683_2592")
+    return self.get_temp(sensor="temp3", chip=SUPERIO_CHIP)
 
   @property
   def host_pch_temperature(self):
     """The host PCH temperature, in °C."""
-    return self.get_temp(sensor="temp4", chip="platform_nct6683_2592")
+    return self.get_temp(sensor="temp4", chip=SUPERIO_CHIP)
 
   @property
   def host_socket_temperature(self):
     """The host CPU socket temperature, in °C."""
-    return self.get_temp(sensor="temp5", chip="platform_nct6683_2592")
+    return self.get_temp(sensor="temp5", chip=SUPERIO_CHIP)
 
   @property
   def host_pcie_temperature(self):
     """The host PCIe x1 slot temperature, in °C."""
-    return self.get_temp(sensor="temp6", chip="platform_nct6683_2592")
+    return self.get_temp(sensor="temp6", chip=SUPERIO_CHIP)
 
   @property
   def host_m2_temperature(self):
     """The host M.2 slot 1 temperature, in °C."""
-    return self.get_temp(sensor="temp7", chip="platform_nct6683_2592")
+    return self.get_temp(sensor="temp7", chip=SUPERIO_CHIP)
 
-  def get_fan_speed(self, fan = "fan1", chip: Optional[str] = "platform_nct6683_2592"):
+  def get_fan_speed(self, fan = "fan1", chip: Optional[str] = SUPERIO_CHIP):
     return self._get_metric_value(fan, chip, 'node_hwmon_fan_rpm')
   
-  def get_temp(self, sensor = "temp1", chip: Optional[str] = "pci0000:00_0000:00:18_3"):
+  def get_temp(self, sensor = "temp1", chip: Optional[str] = CPU_CHIP):
     return self._get_metric_value(sensor, chip, 'node_hwmon_temp_celsius')
+
+  def get_voltage(self, sensor = "in0", chip: Optional[str] = SUPERIO_CHIP, scale = 1):
+    """Read a voltage rail, applying the board's divider ratio.
+
+    node_exporter reports the raw sysfs reading, so the ratios that
+    /etc/sensors.d applies for the `sensors` command are not in the metric.
+    """
+    return self._get_metric_value(sensor, chip, 'node_hwmon_in_volts') * scale
 
   def _get_metric_value(self, sensor, chip, metric):
     self.read_prom_metrics()
@@ -131,6 +143,51 @@ class hostinfo():
             return sample.value
             
     raise MeasurementError(f"Metric {metric} with chip={chip} sensor={sensor} not found")
+
+  @property
+  def host_12v_voltage(self):
+    """The host +12V rail, in V."""
+    return self.get_voltage("in0", scale=12)
+
+  @property
+  def host_5v_voltage(self):
+    """The host +5V rail, in V."""
+    return self.get_voltage("in1", scale=5)
+
+  @property
+  def host_3v3_voltage(self):
+    """The host +3.3V rail, in V."""
+    return self.get_voltage("in8")
+
+  @property
+  def host_soc_voltage(self):
+    """The host CPU northbridge/SoC voltage, in V."""
+    return self.get_voltage("in2")
+
+  @property
+  def host_dram_voltage(self):
+    """The host DRAM voltage, in V."""
+    return self.get_voltage("in3", scale=2)
+
+  @property
+  def host_vcore_voltage(self):
+    """The host CPU core voltage, in V."""
+    return self.get_voltage("in4")
+
+  @property
+  def host_chipset_voltage(self):
+    """The host chipset voltage, in V."""
+    return self.get_voltage("in5")
+
+  @property
+  def host_vddp_voltage(self):
+    """The host CPU VDDP voltage, in V."""
+    return self.get_voltage("in7")
+
+  @property
+  def host_cpu_1v8_voltage(self):
+    """The host CPU 1.8V rail, in V."""
+    return self.get_voltage("in9")
 
   @property
   def serial_number(self):
