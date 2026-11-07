@@ -108,6 +108,10 @@
   units:              "°C"
   output_precision:   2
   display_precision:  1
+  smoothing:
+    method:           "median"
+    window:           3
+    in_cycle:         true
   ha_component_type:  "sensor"
   ha_device_class:    "temperature"
   ha_title:           "Host CPU Temperature"
@@ -167,6 +171,10 @@
   units:              "RPM"
   output_precision:   null
   display_precision:  0
+  smoothing:
+    method:           "median"
+    window:           3
+    in_cycle:         true
   ha_component_type:  "sensor"
   ha_title:           "CPU Fan Speed"
   ha_icon:            "mdi:fan"
@@ -176,6 +184,10 @@
   units:              "RPM"
   output_precision:   null
   display_precision:  0
+  smoothing:
+    method:           "median"
+    window:           3
+    in_cycle:         true
   ha_component_type:  "sensor"
   ha_title:           "Pump Speed"
   ha_icon:            "mdi:pump"
@@ -185,6 +197,10 @@
   units:              "RPM"
   output_precision:   null
   display_precision:  0
+  smoothing:
+    method:           "median"
+    window:           3
+    in_cycle:         true
   ha_component_type:  "sensor"
   ha_entity_category: "diagnostic"
   ha_title:           "System Fan 1 Speed"
@@ -195,6 +211,10 @@
   units:              "RPM"
   output_precision:   null
   display_precision:  0
+  smoothing:
+    method:           "median"
+    window:           3
+    in_cycle:         true
   ha_component_type:  "sensor"
   ha_entity_category: "diagnostic"
   ha_title:           "System Fan 2 Speed"
@@ -205,6 +225,10 @@
   units:              "RPM"
   output_precision:   null
   display_precision:  0
+  smoothing:
+    method:           "median"
+    window:           3
+    in_cycle:         true
   ha_component_type:  "sensor"
   ha_entity_category: "diagnostic"
   ha_title:           "System Fan 3 Speed"

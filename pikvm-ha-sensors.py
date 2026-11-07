@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import sys, socket, argparse
+import sys, socket, argparse, statistics
+from collections import deque
 import netifaces
 import json, yaml, time
 import re, uuid
@@ -120,6 +121,7 @@ class PiKVMHASensors:
     'ha_component_type':  None,
     'ha_device_class':    None,
     'ha_state_class':     'measurement',
+    'smoothing':          None,
     'min_valid':          None,
     'max_valid':          None,
     'ha_entity_category': None,
@@ -135,6 +137,9 @@ class PiKVMHASensors:
     for sensor in sensors:
       s = self.sensor_template | sensor
       s['id'] = "{unique_id}_{sensor_name}".format(unique_id=self.unique_id, sensor_name=sensor['name'])
+      if s['smoothing'] is not None and 'window' not in s['smoothing']:
+        sys.exit("ERROR: sensor {} has smoothing without a window".format(s['name']))
+      s['samples'] = deque(maxlen=s['smoothing']['window']) if s['smoothing'] is not None else None
       self.sensors.append(s)
     self.mqtt_client     = None
     self.mqtt_connected  = False
@@ -261,6 +266,46 @@ class PiKVMHASensors:
     if (low is not None and value < low) or (high is not None and value > high):
       raise MeasurementError("reading {} is outside the plausible range {} to {}".format(value, low, high))
 
+  @staticmethod
+  def aggregate(sensor, values):
+    if sensor['smoothing'].get('method', 'median') == 'mean':
+      return statistics.fmean(values)
+    return statistics.median(values)
+
+  def read_sensor(self, sensor):
+    """Read the sensor, taking a whole window of readings within this cycle when
+    the sensor asks for it. An implausible reading is discarded rather than
+    failing the window."""
+    smoothing = sensor['smoothing']
+    if smoothing is None or not smoothing.get('in_cycle', False):
+      value = getattr(sensor['instance'], sensor['device_property'])
+      self.check_plausible(sensor, value)
+      return value
+
+    readings = []
+    errors = []
+    for attempt in range(smoothing['window']):
+      if attempt > 0 and hasattr(sensor['instance'], 'refresh'):
+        sensor['instance'].refresh()
+      try:
+        value = getattr(sensor['instance'], sensor['device_property'])
+        self.check_plausible(sensor, value)
+      except MeasurementError as error:
+        errors.append(str(error))
+      else:
+        readings.append(value)
+    if not readings:
+      raise MeasurementError("; ".join(errors))
+    return self.aggregate(sensor, readings)
+
+  def smooth(self, sensor, value):
+    """Return the value filtered over the sensor's smoothing window. Readings
+    aggregated within the cycle are already filtered."""
+    if sensor['smoothing'] is None or sensor['smoothing'].get('in_cycle', False):
+      return value
+    sensor['samples'].append(value)
+    return self.aggregate(sensor, sensor['samples'])
+
   def update(self):
       try:
         for sensor in self.sensors:
@@ -268,8 +313,7 @@ class PiKVMHASensors:
           reading = {}
           try:
             # Read the measurement value from the sensor
-            value = getattr(sensor['instance'], sensor['device_property'])
-            self.check_plausible(sensor, value)
+            value = self.read_sensor(sensor)
           except MeasurementError as error:
             self.publish_message(topic=status_topic, payload="offline")
             self.info("Failed to update measurements for sensor {} ({}). Sensor status will be set to offline.".format(sensor['id'], str(error)))
@@ -280,6 +324,7 @@ class PiKVMHASensors:
             if value is not None and not isinstance(value, (bool, str)):
               if sensor['device_offset'] is not None:
                 value += sensor['device_offset']
+              value = self.smooth(sensor, value)
               reading['value'] = round(value, sensor['output_precision'])
             else:
               reading['value'] = value

@@ -155,6 +155,7 @@ Array of sensor definitions (see `sensors.sample.yaml` for annotated reference).
 - **`display_precision`** (int/null): Suggested decimal places for Home Assistant frontend display
 - **`ha_state_class`** (string/null): Home Assistant state class. Defaults to `"measurement"`, which is what makes Home Assistant record long-term statistics. Set it to null for a reading that is not a measurement, such as a timestamp. Ignored for `binary_sensor`.
 - **`min_valid`** / **`max_valid`** (float/null): Plausible range for the reading. A value outside it is discarded and the sensor goes offline for that cycle, which catches the 85 °C a DS18B20 reports after a reset.
+- **`smoothing`** (dict/null): Filter applied to the reading. `method` is `"median"` (rejects outliers) or `"mean"`; `window` is the number of readings. With `in_cycle: true` the whole window is read within one cycle, so there is no lag; the sensor module's `refresh()` hook is called between readings so each one is independent. Without it the window spans successive cycles, which lags about half the window.
 - **`ha_entity_category`** (string/null): Entity category - null for primary sensors, `"diagnostic"` for system info, `"config"` for settings
 - **`ha_icon`** (string/null): Material Design icon (e.g., "mdi:thermometer-lines", "mdi:fan"). Null uses device class default.
 
