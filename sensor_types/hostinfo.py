@@ -12,11 +12,25 @@ class hostinfo():
 
   url = ''
   metrics_cache_expiry_seconds = 5
+  fetch_attempts = 2
+  retry_delay_seconds = 1
   _metrics_cache = {}
 
   def __init__(self, config, addr: Optional[str] = None):
     self.url = config['prometheus_url']
     self.metrics = {}
+
+  def fetch_metrics(self):
+    """Fetch the metrics endpoint, retrying a transient failure such as a DNS blip."""
+    for attempt in range(1, self.fetch_attempts + 1):
+      try:
+        response = requests.get(self.url, timeout=10)
+        response.raise_for_status()
+        return response
+      except requests.RequestException:
+        if attempt == self.fetch_attempts:
+          raise
+        time.sleep(self.retry_delay_seconds)
 
   @property
   def manufacturer(self):
@@ -44,8 +58,7 @@ class hostinfo():
       cache = self._metrics_cache[self.url]
       
       if (datetime.now() - cache['timestamp']).total_seconds() > self.metrics_cache_expiry_seconds:
-        response = requests.get(self.url, timeout=10)
-        response.raise_for_status()
+        response = self.fetch_metrics()
         parsed_metrics = {
             family.name: family 
             for family in parser.text_string_to_metric_families(response.text)
