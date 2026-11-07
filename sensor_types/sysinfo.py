@@ -1,4 +1,5 @@
 import os, time, psutil
+from glob import glob
 from typing import Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -6,6 +7,23 @@ import pacman
 from .measurementerror import MeasurementError
 
 PACMAN_DB_LOCK = '/var/lib/pacman/db.lck'
+CPU_THERMAL_ZONE_TYPE = 'cpu-thermal'
+
+
+def cpu_thermal_zone_path():
+  """Path of the CPU thermal zone's temperature file.
+
+  psutil.sensors_temperatures() builds a reading for every hwmon device, which on
+  a PiKVM includes the 1-Wire probes and so triggers a conversion on each of them.
+  """
+  for zone in sorted(glob('/sys/class/thermal/thermal_zone*')):
+    try:
+      with open(os.path.join(zone, 'type')) as handle:
+        if handle.read().strip() == CPU_THERMAL_ZONE_TYPE:
+          return os.path.join(zone, 'temp')
+    except OSError:
+      continue
+  return None
 
 
 class sysinfo():
@@ -42,13 +60,17 @@ class sysinfo():
 
   def __init__(self, addr: Optional[str] = None, config: Optional[dict] = None):
     self.model = "{bcm_model} ({rpi_model})".format(bcm_model=self.bcm_model, rpi_model=self.rpi_model)
+    self.cpu_temp_path = cpu_thermal_zone_path()
 
   @property
   def cpu_temperature(self):
     """The system CPU temperature in °C."""
+    if self.cpu_temp_path is None:
+      raise MeasurementError("no {} thermal zone found".format(CPU_THERMAL_ZONE_TYPE))
     try:
-      return psutil.sensors_temperatures()['cpu_thermal'][0].current
-    except Exception as error:
+      with open(self.cpu_temp_path) as handle:
+        return int(handle.read().strip()) / 1000
+    except (OSError, ValueError) as error:
       raise MeasurementError(str(error))
   
   @property
