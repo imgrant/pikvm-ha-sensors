@@ -20,6 +20,8 @@ class hostinfo():
     self.url = config['prometheus_url']
     self.collectors = config['prometheus_collectors']
     self.scrape_samples = config['prometheus_samples']
+    self.scrape_interval = config['prometheus_sample_interval']
+    self.request_timeout = config['prometheus_timeout']
     self.metrics_samples = []
 
   @staticmethod
@@ -31,7 +33,7 @@ class hostinfo():
     for attempt in range(1, self.fetch_attempts + 1):
       try:
         params = [('collect[]', collector) for collector in self.collectors] if self.collectors else None
-        response = requests.get(self.url, params=params, timeout=10)
+        response = requests.get(self.url, params=params, timeout=self.request_timeout)
         response.raise_for_status()
         return response
       except requests.RequestException:
@@ -65,7 +67,12 @@ class hostinfo():
       cache = self._metrics_cache[self.url]
       
       if (datetime.now() - cache['timestamp']).total_seconds() > self.metrics_cache_expiry_seconds:
-        cache['samples'] = [self.parse_metrics(self.fetch_metrics()) for _ in range(self.scrape_samples)]
+        samples = []
+        for sample in range(self.scrape_samples):
+          if sample > 0:
+            time.sleep(self.scrape_interval)
+          samples.append(self.parse_metrics(self.fetch_metrics()))
+        cache['samples'] = samples
         cache['timestamp'] = datetime.now()
 
       self.metrics_samples = cache['samples']

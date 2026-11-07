@@ -86,7 +86,9 @@ class PiKVMHASensors:
     'pikvm_password':         None,  # Must be overridden (unless auth is disabled)
     'prometheus_url':         None,
     'prometheus_collectors':  ['hwmon', 'dmi'],
-    'prometheus_samples':     3
+    'prometheus_samples':     3,
+    'prometheus_sample_interval': 1.5,
+    'prometheus_timeout':     2
   }
 
   purge_wait_seconds = 5

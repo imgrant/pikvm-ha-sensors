@@ -17,4 +17,6 @@ prometheus_collectors:
   - hwmon
   - dmi
 prometheus_samples: 3
+prometheus_sample_interval: 1.5
+prometheus_timeout: 2
 ...
