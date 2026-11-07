@@ -1,4 +1,4 @@
-import time, requests
+import time, requests, statistics
 from typing import Optional
 from datetime import datetime
 from prometheus_client import parser
@@ -19,11 +19,12 @@ class hostinfo():
   def __init__(self, config, addr: Optional[str] = None):
     self.url = config['prometheus_url']
     self.collectors = config['prometheus_collectors']
-    self.metrics = {}
+    self.scrape_samples = config['prometheus_samples']
+    self.metrics_samples = []
 
-  def refresh(self):
-    """Drop the cached metrics so the next read fetches a fresh scrape."""
-    self._metrics_cache.pop(self.url, None)
+  @staticmethod
+  def parse_metrics(response):
+    return {family.name: family for family in parser.text_string_to_metric_families(response.text)}
 
   def fetch_metrics(self):
     """Fetch the metrics endpoint, retrying a transient failure such as a DNS blip."""
@@ -49,7 +50,7 @@ class hostinfo():
   def _dmi_label(self, label):
     try:
       self.read_prom_metrics()
-      return self.metrics['node_dmi_info'].samples[0].labels[label]
+      return self.metrics_samples[0]['node_dmi_info'].samples[0].labels[label]
     except (MeasurementError, KeyError, IndexError):
       return ''
 
@@ -58,21 +59,16 @@ class hostinfo():
       if self.url not in self._metrics_cache:
         self._metrics_cache[self.url] = {
           'timestamp': datetime.fromisoformat("2023-01-01T00:00"),
-          'data': {}
+          'samples': []
         }
       
       cache = self._metrics_cache[self.url]
       
       if (datetime.now() - cache['timestamp']).total_seconds() > self.metrics_cache_expiry_seconds:
-        response = self.fetch_metrics()
-        parsed_metrics = {
-            family.name: family 
-            for family in parser.text_string_to_metric_families(response.text)
-        }
-        cache['data'] = parsed_metrics
+        cache['samples'] = [self.parse_metrics(self.fetch_metrics()) for _ in range(self.scrape_samples)]
         cache['timestamp'] = datetime.now()
-      
-      self.metrics = cache['data']
+
+      self.metrics_samples = cache['samples']
 
     except (requests.RequestException, StopIteration) as error:
       raise MeasurementError(str(error))
@@ -147,16 +143,22 @@ class hostinfo():
     return self._get_metric_value(sensor, chip, 'node_hwmon_in_volts') * scale
 
   def _get_metric_value(self, sensor, chip, metric):
+    """Median of the reading across the scrapes taken this cycle, which rejects a
+    spurious value such as a tach double-count."""
     self.read_prom_metrics()
-    if metric not in self.metrics:
-        raise MeasurementError(f"Metric {metric} not found")
-        
-    family = self.metrics[metric]
-    for sample in family.samples:
+    values = []
+    for metrics in self.metrics_samples:
+      family = metrics.get(metric)
+      if family is None:
+        continue
+      for sample in family.samples:
         if sample.labels.get('chip') == chip and sample.labels.get('sensor') == sensor:
-            return sample.value
-            
-    raise MeasurementError(f"Metric {metric} with chip={chip} sensor={sensor} not found")
+          values.append(sample.value)
+          break
+
+    if not values:
+      raise MeasurementError(f"Metric {metric} with chip={chip} sensor={sensor} not found")
+    return statistics.median(values)
 
   @property
   def host_12v_voltage(self):

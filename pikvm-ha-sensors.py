@@ -85,7 +85,8 @@ class PiKVMHASensors:
     'pikvm_username':         'admin',
     'pikvm_password':         None,  # Must be overridden (unless auth is disabled)
     'prometheus_url':         None,
-    'prometheus_collectors':  ['hwmon', 'dmi']
+    'prometheus_collectors':  ['hwmon', 'dmi'],
+    'prometheus_samples':     3
   }
 
   purge_wait_seconds = 5
@@ -273,35 +274,14 @@ class PiKVMHASensors:
     return statistics.median(values)
 
   def read_sensor(self, sensor):
-    """Read the sensor, taking a whole window of readings within this cycle when
-    the sensor asks for it. An implausible reading is discarded rather than
-    failing the window."""
-    smoothing = sensor['smoothing']
-    if smoothing is None or not smoothing.get('in_cycle', False):
-      value = getattr(sensor['instance'], sensor['device_property'])
-      self.check_plausible(sensor, value)
-      return value
-
-    readings = []
-    errors = []
-    for attempt in range(smoothing['window']):
-      if attempt > 0 and hasattr(sensor['instance'], 'refresh'):
-        sensor['instance'].refresh()
-      try:
-        value = getattr(sensor['instance'], sensor['device_property'])
-        self.check_plausible(sensor, value)
-      except MeasurementError as error:
-        errors.append(str(error))
-      else:
-        readings.append(value)
-    if not readings:
-      raise MeasurementError("; ".join(errors))
-    return self.aggregate(sensor, readings)
+    value = getattr(sensor['instance'], sensor['device_property'])
+    self.check_plausible(sensor, value)
+    return value
 
   def smooth(self, sensor, value):
-    """Return the value filtered over the sensor's smoothing window. Readings
-    aggregated within the cycle are already filtered."""
-    if sensor['smoothing'] is None or sensor['smoothing'].get('in_cycle', False):
+    """Return the value filtered over the sensor's smoothing window, which spans
+    successive cycles."""
+    if sensor['smoothing'] is None:
       return value
     sensor['samples'].append(value)
     return self.aggregate(sensor, sensor['samples'])

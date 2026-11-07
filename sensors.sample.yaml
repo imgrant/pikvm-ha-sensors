@@ -11,8 +11,7 @@
   max_valid:          65            # Optional. reject readings above this
   smoothing:                        # Optional. omit for no filtering
     method:           "median"      # 'median' rejects outliers, 'mean' averages
-    window:           3             # number of readings to filter over
-    in_cycle:         true          # take the whole window in one cycle (no lag), rather than over successive cycles
+    window:           5             # number of successive readings to filter over
   ha_component_type:  "sensor"      # Required. HA component type such as 'sensor' or 'binary_sensor'
   ha_device_class:    "temperature" # Required. HA device class for the component type, e.g. 'temperature'
   ha_state_class:     "measurement" # Optional. HA state class, needed for long-term statistics. Defaults to 'measurement'; use null for a timestamp or other non-measurement reading. Ignored for 'binary_sensor'.

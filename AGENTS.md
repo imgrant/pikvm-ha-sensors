@@ -132,6 +132,7 @@ Application-wide settings (see `config.sample.yaml` for reference):
 - **`pikvm_password`** (string): Password for PiKVM API authentication (required for `kvmd` sensor type)
 - **`prometheus_url`** (string): URL to Prometheus node_exporter metrics endpoint (required for `hostinfo` sensor type)
 - **`prometheus_collectors`** (list/null): node_exporter collectors to request with `collect[]`, which keeps the scrape small (default: `["hwmon", "dmi"]`). Use null to fetch every collector, which on a typical host is around 790 KB and costs about a second to parse.
+- **`prometheus_samples`** (int): Scrapes taken each time the host metrics cache expires (default: 3). Every `hostinfo` reading is the median across them, which rejects a spurious value such as a fan tach double-count without adding lag. Set it to 1 for a single scrape.
 
 The application reads `config.yaml` by default, or accepts a path as the first command-line argument.
 
@@ -155,7 +156,7 @@ Array of sensor definitions (see `sensors.sample.yaml` for annotated reference).
 - **`display_precision`** (int/null): Suggested decimal places for Home Assistant frontend display
 - **`ha_state_class`** (string/null): Home Assistant state class. Defaults to `"measurement"`, which is what makes Home Assistant record long-term statistics. Set it to null for a reading that is not a measurement, such as a timestamp. Ignored for `binary_sensor`.
 - **`min_valid`** / **`max_valid`** (float/null): Plausible range for the reading. A value outside it is discarded and the sensor goes offline for that cycle, which catches the 85 °C a DS18B20 reports after a reset.
-- **`smoothing`** (dict/null): Filter applied to the reading. `method` is `"median"` (rejects outliers) or `"mean"`; `window` is the number of readings. With `in_cycle: true` the whole window is read within one cycle, so there is no lag; the sensor module's `refresh()` hook is called between readings so each one is independent. Without it the window spans successive cycles, which lags about half the window.
+- **`smoothing`** (dict/null): Filter applied over successive readings. `method` is `"median"` (rejects outliers) or `"mean"`; `window` is the number of readings, which lags about half the window. `hostinfo` sensors do not need this: that module takes several scrapes per cycle and medians them, which rejects outliers without lag.
 - **`ha_entity_category`** (string/null): Entity category - null for primary sensors, `"diagnostic"` for system info, `"config"` for settings
 - **`ha_icon`** (string/null): Material Design icon (e.g., "mdi:thermometer-lines", "mdi:fan"). Null uses device class default.
 
