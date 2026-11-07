@@ -120,6 +120,8 @@ class PiKVMHASensors:
     'ha_component_type':  None,
     'ha_device_class':    None,
     'ha_state_class':     'measurement',
+    'min_valid':          None,
+    'max_valid':          None,
     'ha_entity_category': None,
     'ha_icon':            None,
     'ha_title':           None
@@ -249,6 +251,16 @@ class PiKVMHASensors:
     SensorClass = getattr(importlib.import_module("sensor_types.{}".format(sensor['device_type'])), sensor['device_type'])
     sensor['instance'] = SensorClass(addr=sensor['device_address'], config=self.config)
 
+  @staticmethod
+  def check_plausible(sensor, value):
+    """Reject a reading outside the sensor's plausible range, such as the 85 °C
+    a DS18B20 reports when it has reset."""
+    if value is None or isinstance(value, (bool, str)):
+      return
+    low, high = sensor['min_valid'], sensor['max_valid']
+    if (low is not None and value < low) or (high is not None and value > high):
+      raise MeasurementError("reading {} is outside the plausible range {} to {}".format(value, low, high))
+
   def update(self):
       try:
         for sensor in self.sensors:
@@ -257,6 +269,7 @@ class PiKVMHASensors:
           try:
             # Read the measurement value from the sensor
             value = getattr(sensor['instance'], sensor['device_property'])
+            self.check_plausible(sensor, value)
           except MeasurementError as error:
             self.publish_message(topic=status_topic, payload="offline")
             self.info("Failed to update measurements for sensor {} ({}). Sensor status will be set to offline.".format(sensor['id'], str(error)))

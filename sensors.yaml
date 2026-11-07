@@ -27,6 +27,8 @@
   units:              "°C"
   output_precision:   3
   display_precision:  1
+  min_valid:          -5
+  max_valid:          65
   ha_component_type:  "sensor"
   ha_device_class:    "temperature"
   ha_icon:            "mdi:coolant-temperature"
@@ -39,6 +41,8 @@
   units:              "°C"
   output_precision:   3
   display_precision:  1
+  min_valid:          -5
+  max_valid:          65
   ha_component_type:  "sensor"
   ha_device_class:    "temperature"
   ha_icon:            "mdi:thermometer-chevron-down"
@@ -50,6 +54,8 @@
   units:              "°C"
   output_precision:   3
   display_precision:  1
+  min_valid:          -5
+  max_valid:          65
   ha_component_type:  "sensor"
   ha_device_class:    "temperature"
   ha_icon:            "mdi:thermometer-chevron-up"
