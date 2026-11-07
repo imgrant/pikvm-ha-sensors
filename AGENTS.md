@@ -131,6 +131,7 @@ Application-wide settings (see `config.sample.yaml` for reference):
 - **`pikvm_username`** (string): Username for PiKVM API authentication (default: "admin")
 - **`pikvm_password`** (string): Password for PiKVM API authentication (required for `kvmd` sensor type)
 - **`prometheus_url`** (string): URL to Prometheus node_exporter metrics endpoint (required for `hostinfo` sensor type)
+- **`prometheus_collectors`** (list/null): node_exporter collectors to request with `collect[]`, which keeps the scrape small (default: `["hwmon", "dmi"]`). Use null to fetch every collector, which on a typical host is around 790 KB and costs about a second to parse.
 
 The application reads `config.yaml` by default, or accepts a path as the first command-line argument.
 

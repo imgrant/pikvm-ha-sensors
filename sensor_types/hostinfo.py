@@ -18,13 +18,19 @@ class hostinfo():
 
   def __init__(self, config, addr: Optional[str] = None):
     self.url = config['prometheus_url']
+    self.collectors = config['prometheus_collectors']
     self.metrics = {}
+
+  def refresh(self):
+    """Drop the cached metrics so the next read fetches a fresh scrape."""
+    self._metrics_cache.pop(self.url, None)
 
   def fetch_metrics(self):
     """Fetch the metrics endpoint, retrying a transient failure such as a DNS blip."""
     for attempt in range(1, self.fetch_attempts + 1):
       try:
-        response = requests.get(self.url, timeout=10)
+        params = [('collect[]', collector) for collector in self.collectors] if self.collectors else None
+        response = requests.get(self.url, params=params, timeout=10)
         response.raise_for_status()
         return response
       except requests.RequestException:

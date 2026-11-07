@@ -83,7 +83,8 @@ class PiKVMHASensors:
     'mqtt_ha_prefix':         'homeassistant',
     'pikvm_username':         'admin',
     'pikvm_password':         None,  # Must be overridden (unless auth is disabled)
-    'prometheus_url':         None
+    'prometheus_url':         None,
+    'prometheus_collectors':  ['hwmon', 'dmi']
   }
 
   purge_wait_seconds = 5
