@@ -338,9 +338,13 @@ class PiKVMHASensors:
     self.mqtt_connect()
     time.sleep(2)
     while True:
+      started = time.monotonic()
       self.info("Timestamp: {}".format(datetime.now().isoformat(timespec='seconds')))
       self.update()
-      time.sleep(self.config['update_period'])
+      elapsed = time.monotonic() - started
+      if elapsed > self.config['update_period']:
+        print("Sensor sweep took {:.1f}s, which exceeds the {}s update period".format(elapsed, self.config['update_period']), file=sys.stderr)
+      time.sleep(max(0, self.config['update_period'] - elapsed))
 
 
 def load_yaml(file):
